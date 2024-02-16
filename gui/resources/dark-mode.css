@@ -1,0 +1,30 @@
+.root {
+  -fx-background-color: #333;
+}
+
+.label {
+  -fx-text-fill: white;
+}
+
+.button {
+  -fx-background-color: #555;
+  -fx-text-fill: white;
+  -fx-font-weight: bold;
+  -fx-font-size: 12px; /* Adjust the font size as needed */
+  -fx-padding: 10px 20px; /* Adjust the padding for height and width */
+}
+
+.button:hover {
+  -fx-background-color: #777;
+}
+
+.text-field {
+  -fx-background-color: #777;
+  -fx-border-color: #777;
+  -fx-border-width: 1px;
+  -fx-border-radius: 3px;
+  -fx-padding: 8px;
+  -fx-font-weight: bold;
+  -fx-text-fill: white;
+  -fx-prompt-text-fill: white;
+}

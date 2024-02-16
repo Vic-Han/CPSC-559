@@ -4,7 +4,7 @@ import java.net.*;
 // class responsible for load balancing and managing workers
 public class Server {
     public static void main(String a[]) throws IOException {
-        int port = 1969; //my birth year port!
+        int port = 1969; 
         Socket s;
         System.out.println("Initiating Server...");
 
