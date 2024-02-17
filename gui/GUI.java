@@ -2,8 +2,9 @@ import javafx.application.Application; import javafx.scene.Scene; import javafx.
 import javafx.scene.control.Label; import javafx.scene.image.Image; import javafx.geometry.Insets;
 import javafx.scene.layout.BorderPane; import javafx.scene.layout.VBox; import javafx.stage.DirectoryChooser;
 import javafx.scene.control.TextField; import javafx.scene.control.PasswordField; import javafx.stage.Stage;
+import javafx.stage.FileChooser; import javafx.scene.layout.HBox; import javafx.scene.control.TextInputDialog;
 import java.io.IOException; import java.io.File; import java.nio.file.Files;
-import javafx.stage.FileChooser; 
+import java.util.Optional;
 
 // run/compile within gui directory using
 // java --module-path "C:\Program Files\Java\javafx-sdk-21.0.2\lib" --add-modules javafx.controls GUI
@@ -28,6 +29,8 @@ public class GUI extends Application {
         // Layout
         VBox vbox = new VBox(10); // 10 pixels spacing between elements
         vbox.setPadding(new Insets(20)); // 20 pixels padding around the VBox
+        // Place login and register buttons horizontally using HBox
+        HBox buttonBox = new HBox(10);
 
         // UI components
         Label titleLabel = new Label("File Transfer App");
@@ -44,11 +47,18 @@ public class GUI extends Application {
         Button loginButton = new Button("Login");
         loginButton.getStyleClass().add("button");
 
+        Button registerButton = new Button("Register");
+        registerButton.getStyleClass().add("button");
+
+        buttonBox.getChildren().addAll(registerButton, loginButton);
+
         // Event handler
         loginButton.setOnAction(e -> handleLogin(usernameField.getText(), passwordField.getText()));
+        registerButton.setOnAction(e -> handleRegistration(usernameField.getText(), passwordField.getText()));
 
-        vbox.getChildren().addAll(titleLabel, usernameField, passwordField, loginButton);
+        vbox.getChildren().addAll(titleLabel, usernameField, passwordField, buttonBox);
         vbox.setAlignment(javafx.geometry.Pos.CENTER);
+        buttonBox.setAlignment(javafx.geometry.Pos.CENTER);
 
         // Scene
         Scene scene = new Scene(new BorderPane(vbox), 300, 200);
@@ -65,20 +75,25 @@ public class GUI extends Application {
         // UI components
         Button uploadButton = new Button("Upload File");
         Button downloadButton = new Button("Download File");
+        Button shareButton = new Button("Share File(s)");
 
         // Event handlers
         uploadButton.setOnAction(e -> uploadFile(primaryStage));
         downloadButton.setOnAction(e -> downloadFile(primaryStage));
+        shareButton.setOnAction(e -> shareFiles(primaryStage));
 
         // Layout
         VBox vbox = new VBox(10); // 10 pixels spacing between elements
         vbox.setPadding(new Insets(20)); // 20 pixels padding around the VBox
+        HBox buttonBox = new HBox(10);
+        buttonBox.getChildren().addAll(uploadButton, downloadButton);
 
         Label titleLabel = new Label(username+"'s File Transfer App");
         titleLabel.setStyle("-fx-font-size: 24; -fx-font-weight: bold;");
 
-        vbox.getChildren().addAll(titleLabel, uploadButton, downloadButton);
+        vbox.getChildren().addAll(titleLabel, buttonBox, shareButton);
         vbox.setAlignment(javafx.geometry.Pos.CENTER);
+        buttonBox.setAlignment(javafx.geometry.Pos.CENTER);
 
         // Scene
         Scene scene = new Scene(new BorderPane(vbox), 400, 300);
@@ -99,6 +114,13 @@ public class GUI extends Application {
             System.out.println("Login failed. Invalid credentials.");
             // Add code for handling failed login
         }
+    }
+
+    private void handleRegistration(String username, String password) {
+        System.out.println("New Username: " + username);
+        System.out.println("New Password: " + password);
+        
+        // add user to DB
     }
 
     private void uploadFile(Stage primaryStage) {
@@ -131,6 +153,29 @@ public class GUI extends Application {
                 System.out.println("File downloaded to: " + selectedDirectory.getAbsolutePath());
             } catch (IOException e) {
                 System.out.println("FAILED to download to: " + selectedDirectory.getAbsolutePath());
+            }
+        }
+    }
+
+    private void shareFiles(Stage primaryStage){
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Select File to Share");
+        File selectedFile = fileChooser.showOpenDialog(primaryStage);
+        if (selectedFile != null) {
+            try {
+                System.out.println("File selected: " + selectedFile.getName());
+                TextInputDialog dialog = new TextInputDialog();
+                dialog.setTitle("User Input");
+                dialog.setHeaderText("Please enter the username you would like to share this file with:");
+                dialog.setContentText("Username:");
+                // Show the dialog and wait for the user's response
+                Optional<String> result = dialog.showAndWait();
+                // Process the result
+                result.ifPresent(name -> {
+                    System.out.println("Share with: " + name);
+                });
+            } catch (Exception e) {
+                System.out.println("FAILED to select: " + selectedFile.getName());
             }
         }
     }
