@@ -1,7 +1,5 @@
 import java.io.*;
 import java.net.*;
-import java.util.*;
-
 /**
  * For each incomming request, the Server spawns a new Runner thread to satisfy
  * the request
@@ -16,52 +14,50 @@ public class Runner extends Thread {
 
   public void run() {
 
-    String command = null;
-    String argument = null;
-    File rf;
-
     System.out.println("\nNew Thread: " + Runner.currentThread());
 
     // I/O streams for the socket
     DataInputStream is = null;
-    PrintStream os = null;
+    DataOutputStream os = null;
+    ProtocolHandler handler = new ProtocolHandler(os, is);
 
     // Get these I/O streams
     try {
       is = new DataInputStream(this.s.getInputStream());
-      os = new PrintStream(this.s.getOutputStream());
+      os = new DataOutputStream(this.s.getOutputStream());
 
       // send your greating to the client
-      os.println("Welcome to this wonderful server");
+      os.writeUTF("Welcome to this wonderful server");
       os.flush();
 
-      // receive the client's request. Example request: 1:source.txt
-      StringTokenizer request = new StringTokenizer(is.readLine(),"$");
-      if (request.countTokens() == 2) {
-        command = request.nextToken();
-        argument = request.nextToken();
-        System.out.println("Client's command: " + "\t" + argument);
+      while(true) {
+        int code = is.readUnsignedByte();
+        if(code == 0) break;
+        switch(code) {
+          case 1:
+            handler.login();
+            break;
+          case 2:
+            handler.register();
+            break;
+          case 3:
+            handler.upload();
+            break;
+          case 4:
+            handler.download();
+            break;
+          case 5:
+            handler.share();
+            break;
+          case 6:
+            handler.unshare();
+            break;
+          case 7:
+            handler.delete();
+            break;
+        }
       }
-
-      switch (command) { // a file is requested
-        case "1":
-          System.out.println("Client requested file upload: " + argument);
-          rf = new File(argument);
-          if (rf.exists()){
-            os.println("File Exists modify the code to transfer it");
-          }
-          else {
-            os.println("File Does Not Exist ...");
-          }
-          break;
-        case "2":
-          System.out.println("Client requested file upload: " + argument);
-          break;
-        default:
-          System.out.println("Invalid Command");
-      }
-
-      // close "this"  connection with the client
+      
       this.s.close();
 
     }
