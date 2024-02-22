@@ -1,6 +1,6 @@
 import java.io.*;
 import java.net.*;
-import ClientRequest;
+import ClientLogic;
 // class responsible for handling user input and output through a jswing interface
 public class Client {
 
