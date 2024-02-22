@@ -2,7 +2,7 @@ import java.io.*;
 import java.net.*;
 
 // class responsible for load balancing and managing workers
-public class Server {
+public class Master {
     public static void main(String a[]) throws IOException {
         int port = 1969; 
         Socket s;
