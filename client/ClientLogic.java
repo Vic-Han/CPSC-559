@@ -26,15 +26,18 @@ public class ClientLogic {
         this.masterPort = masterPort;
     }
     // method that is called when the user chooses to download a file
+    // socket messages will be sent by helper methods defined below
     // gui should not allow user to download a file that they do not have access to
     public static void fileUpload(String filePath, int userID) {
         
     }
     // method that is called when the user chooses to download a file
+    // socket messages will be sent by helper methods defined below
     // gui should not allow user to download a file that they do not have access to
     public static void fileDownload(String filePath, int userID) {
         
     }
+    // socket messages should be sent and recived here
     // method that is called when user tries to login
     // returns userID
     public static int loginRequest(String username, String password) {
@@ -43,19 +46,24 @@ public class ClientLogic {
     }
   
     // method that is called when user tries to register
+    // socket messages should be sent and recived here
+    // returns userID
     public static int registerRequest(String username, String password) {
 
         return -1;
     }
     // method that is called when user tries to delete a file
+    // socket messages should be sent and recived here
     public static void deleteRequest(String filePath, int userID) {
 
     }
     // method that is called when user tries to share a file
+    // socket messages should be sent and recived here
     public static void shareRequest(String fileName, String sharedUser, int userID) {
 
     }
     // method that is called when user tries to unshare a file
+    // socket messages should be sent and recived here
     public static void unshareRequest(String fileName, String sharedUser, int userID) {
 
     }
@@ -70,11 +78,14 @@ public class ClientLogic {
 
     // asks the load balancer/master for a worker that can accept the upload
     // returns the worker IP and port number
+    // socket messages should be sent and recived here
     private static Pair<String, int> sendUploadRequest(String fileName){
 
         return null;
     }
-     // method that uploads file to worker
+
+    // method that uploads file to worker
+    // socket messages should be sent and recived here    
     private static void uploadFiletoWorker(String fileName, String workerIP, int portNo){
 
     }
@@ -87,6 +98,7 @@ public class ClientLogic {
 
     //  asks the load balancer/master for a worker that has the file
     // returns the worker IP and port number
+    // socket messages should be sent and recived here
     private static Pair<String, int> sendDownloadRequest(String fileName){
 
         return null;
@@ -94,6 +106,7 @@ public class ClientLogic {
     // method that downloads file from worker
     // puts the file in local(client) file system and the user can download it from there
     // may need to change UX mentioned above
+    // socket messages should be sent and recived here
     private static void downloadFileFromWorker(String fileName, String workerIP, int portNo){
 
     }
