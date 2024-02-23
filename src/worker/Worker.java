@@ -1,3 +1,4 @@
+package worker;
 import java.io.*;
 import WorkerJobs;
 

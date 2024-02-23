@@ -1,3 +1,5 @@
+package server;
+
 import Utilities.*;
 // static class that provides the parsing of the raw binary data
 public class MasterParser {

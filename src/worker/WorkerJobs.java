@@ -1,3 +1,5 @@
+package worker;
+
 import java.io.File;
 // class that is responsible for storing files and processing requests
 // for now it does not communicate with the master

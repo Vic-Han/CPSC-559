@@ -1,3 +1,5 @@
+package client;
+
 public class ClientParser{
     public static parseLogin(byte[] data, int dataSize){    
 

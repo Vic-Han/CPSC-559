@@ -1,5 +1,6 @@
-import java.io.Serializable;
 package Utilities;
+
+import java.io.Serializable;
 // all communication protocols will be done using this class
 // can add or remove things as needed, without changing the protocol
 public class Message implements Serializable {
