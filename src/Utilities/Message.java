@@ -16,6 +16,7 @@ public class Message implements Serializable {
 
     private byte messageCode;
     private byte[] messageData;
+    private int[] dataSizes;
     private int messageLength;
 
     // message types

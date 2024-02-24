@@ -7,6 +7,7 @@ import java.io.ObjectOutputStream;
 
 import java.util.ArrayList;
 import Utilities.*;
+import server.MasterParser;
 // instance based as it may be used by multiple threads
 public class ProtocolHandler {
     ObjectInputStream is;
@@ -23,20 +24,57 @@ public class ProtocolHandler {
     // for each message it needs to call the static parser corresponding to the message type
     // it should then deconstruct the the tuple and use it to call the appropriate handler defined below
     public void handleMessage(Message message) {
-       
+    	
     }
 
     // method that is called when the server recieves a request to upload a file
     // should tell the client the worker IP and port number
     // should give the client an authentication token to talk to the worker(future)
     private void handleUploadRequest(String fileName, int userID, String ClientIP, int ClientPort) {
-      
+    	//LOAD BALANCER
+    	
+    	// Get available worker
+    	
+    	// send info back to client
+    	
+    	//WORKER
+    	// parse message for length and filename
+    	
+    	// zach's code
+    	/*
+    	 	int read = 0;
+            long totalRead = 0;
+            while ((read = in.read(buf, 0, Math.min(buf.length, (int) (fileSize - totalRead)))) > 0) {
+                totalRead += read;
+                fos.write(buf, 0, read);
+                // Send ACK for each packet
+                out.writeUTF("ACK");
+            }
+    	 */
     }
     
     // method that is called when the server recieves a request to download a file
     // should tell the client the worker IP and port number that has the download
     private void handleDownloadRequest(String fileName, int userID, String ClientIP, int ClientPort) {
-
+    	//LOAD BALANCER
+    	// Get available worker
+    	// send info back to client
+    	//WORKER
+    	// parse message for length and filename
+    	
+    	// zach's code
+    	/*
+    	 	int read;
+            while ((read = fis.read(buf)) > 0) {
+                out.write(buf, 0, read);
+                // Wait for ACK
+                String ack = in.readUTF();
+                if (!"ACK".equals(ack)) {
+                    System.out.println("Error in transmission, stopping.");
+                    break;
+                }
+            }
+    	 */
     }
 
     // method that is called when the server recieves a request to login

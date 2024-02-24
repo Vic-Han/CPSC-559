@@ -31,7 +31,22 @@ public class ClientLogic {
     // socket messages will be sent by helper methods defined below
     // gui should not allow user to download a file that they do not have access to
     public static void fileUpload(String filePath, int userID) {
-        
+        //send to load balancer request for server
+    	//receive response from server
+    	//create new socket from response message
+    	//
+    	/*
+		 	int read;
+	        while ((read = fis.read(buf)) > 0) {
+	            out.write(buf, 0, read);
+	            // Wait for ACK
+	            String ack = in.readUTF();
+	            if (!"ACK".equals(ack)) {
+	                System.out.println("Error in transmission, stopping.");
+	                break;
+	            }
+	        }
+		 */
     }
     // method that is called when the user chooses to download a file
     // socket messages will be sent by helper methods defined below
