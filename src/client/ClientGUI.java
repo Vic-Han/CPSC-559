@@ -1,24 +1,25 @@
 package client;
 
-import javafx.application.Application; 
-import javafx.scene.Scene; 
-import javafx.scene.control.Button;
-import javafx.scene.control.Label; 
-import javafx.scene.image.Image; 
-import javafx.geometry.Insets;
-import javafx.scene.layout.BorderPane; 
-import javafx.scene.layout.VBox; 
-import javafx.stage.DirectoryChooser;
-import javafx.scene.control.TextField; 
-import javafx.scene.control.PasswordField; 
-import javafx.stage.Stage;
-import javafx.stage.FileChooser; 
-import javafx.scene.layout.HBox; 
-import javafx.scene.control.TextInputDialog;
-import java.io.IOException; 
-import java.io.File; 
+import java.awt.Button;
+import java.awt.Image;
+import java.awt.Insets;
+import java.awt.Label;
+import java.awt.TextField;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Optional;
+
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextInputDialog;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
 // run/compile within gui directory using
 // java --module-path "C:\Program Files\Java\javafx-sdk-21.0.2\lib" --add-modules javafx.controls GUI

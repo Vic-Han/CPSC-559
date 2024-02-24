@@ -123,14 +123,8 @@ public class MasterDatabase {
             //Execute the insert statement (will throw error if user already exists)
             statement.executeUpdate(updateQuery);
             
-            //Select the user just added.
-            ResultSet rs = statement.executeQuery(selectQuery);
-            
-            //ResultSet should only contain one entry so there is no need for a while loop
-            rs.next();
-            
             //Return the UserID of the inserted user.
-            return rs.getInt("userID");
+            return getUserID(username);
         }catch(Exception e) {
         	//e.printStackTrace();;
             return -1;
