@@ -60,10 +60,53 @@ public class MasterDatabase {
     	}
     }
     
-    //TODO: Implement
     private static int getUserID(String username){
-    	return -1;
+    	String selectQuery = "SELECT userID FROM users WHERE username =\'"+username+"\'";
+        
+    	try {
+    		//Execute the statement to add the file.
+        	Connection conn = getConnection();
+            Statement statement = conn.createStatement();
+            
+            //Get result set before deleting row
+            ResultSet rs = statement.executeQuery(selectQuery);
+          //Get File ID to delete anything in the shared table that references this file.
+            rs.next();
+            int fileID = rs.getInt("userID");
+            return fileID;
+    	}catch(Exception e) {
+    		return -1;
+    	}
     }
+    
+    private static String getNameFromID(int userID) {
+    	String query = "SELECT * FROM users WHERE userID = \'" + userID +"\'";
+    	
+        try {
+        	//Execute the query to select the users that contain a username.
+            ResultSet rs = getConnection().createStatement().executeQuery(query);
+            
+            rs.next();
+            return rs.getString("username");
+        }catch(Exception e) {
+        	return null;
+        }
+    }
+    
+    private static String getFileNameFromID(int fileID) {
+    	String query = "SELECT * FROM files WHERE fileID = \'" + fileID +"\'";
+    	
+        try {
+        	//Execute the query to select the users that contain a username.
+            ResultSet rs = getConnection().createStatement().executeQuery(query);
+            
+            rs.next();
+            return rs.getString("fileName");
+        }catch(Exception e) {
+        	return null;
+        }
+    }
+    
 
     // method to exec the sql to insert a new user with given username and password
     // should return userID on success
@@ -209,29 +252,57 @@ public class MasterDatabase {
     // method to exec the sql to get all files that the user owns
     // should return a list of file paths
     public static ArrayList<String> getAllOwnedFiles(int userID){
-
-        return new ArrayList<String>();
+    	ArrayList<String> owned = new ArrayList<String>();
+    	String query = "SELECT * FROM files WHERE owner = \'" + userID +"\'";
+    	
+        try {
+        	//Execute the query to select the users that contain a username.
+            ResultSet rs = getConnection().createStatement().executeQuery(query);
+            
+            while(rs.next()) {
+            	owned.add(getFileNameFromID(rs.getInt("fileID")));
+            }
+        }catch(Exception e) {
+        	return null;
+        }
+    	
+        return owned;
     }
 
     // method to exec the sql to get all files that are shared with the user
 
     public static ArrayList<String> getAllSharedFiles(int userID){
-
-        return new ArrayList<String>();
+    	ArrayList<String> shared = new ArrayList<String>();
+    	String query = "SELECT * FROM shared WHERE sharedWith = \'" + userID +"\'";
+    	
+        try {
+        	//Execute the query to select the users that contain a username.
+            ResultSet rs = getConnection().createStatement().executeQuery(query);
+            
+            while(rs.next()) {
+            	shared.add(getFileNameFromID(rs.getInt("fileID")));
+            }
+        }catch(Exception e) {
+        	return null;
+        }
+    	
+        return shared;
     }
 
-    public static void main(String[] args) throws InterruptedException {
-    	//System.out.println(registerUser("Owen", "Test"));
-    	//System.out.println(registerUser("Matteo", "Test2"));
-    	//System.out.println(addFile("Test_File.txt", 1));
-    	//System.out.println(shareFile("Test_File.txt", 2, 1));
-    	//listEntries();
-    	
-    	//System.out.println(unshareFile("Test_File.txt", 2, 1));
-    	//listEntries();
-    	
-    	
-       
-    }
+//    public static void main(String[] args) throws InterruptedException {
+//    	//System.out.println(registerUser("Owen", "Test"));
+//    	//System.out.println(registerUser("Matteo", "Test2"));
+//    	//System.out.println(addFile("Test_File3.txt", 1));
+//    	System.out.println(shareFile("Test_File3.txt", 2, 1));
+//    	//listEntries();
+//    	
+//    	//System.out.println(unshareFile("Test_File.txt", 2, 1));
+//    	//listEntries();
+//    	
+//    	//System.out.println(getAllOwnedFiles(1).toString());
+//    	//System.out.println(getAllSharedFiles(2).toString());
+//    	
+//       
+//    }
 
 }
