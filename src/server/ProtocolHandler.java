@@ -1,37 +1,22 @@
 package server;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-//import java.io.DataInputStream;
-//import java.io.DataOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
 
 import Utilities.*;
 import server.MasterParser;
 // instance based as it may be used by multiple threads
 public class ProtocolHandler {
-    ObjectInputStream is;
-    ObjectOutputStream os;
+    DataInputStream is;
+    DataOutputStream os;
 
 
-    public ProtocolHandler(ObjectOutputStream os, ObjectInputStream is) {
+    public ProtocolHandler(DataOutputStream os, DataInputStream is) {
         this.os = os;
         this.is = is;
-    }
-
-    // method that is called when the server recieves a message
-    // should look at the message code and call appropriate methods
-    // for each message it needs to call the static parser corresponding to the message type
-    // it should then deconstruct the the tuple and use it to call the appropriate handler defined below
-    public void handleMessage(Message message) {
-    	if(message.getMessageType() == 4) {
-    		//parse
-    		//handleUploadRequest
-    		Pair<Long, String> data = MasterParser.workerParseUpload(message.getMessageData(), message.getDataSizes());
-    		workerHandleUploadRequest(data.first.longValue(), data.second);
-    	}
     }
 
     // method that is called when the server recieves a request to upload a file
@@ -41,26 +26,24 @@ public class ProtocolHandler {
     	
     }
     
-    private void workerHandleUploadRequest(long size, String filename) {
-    	FileOutputStream fos;
-    	long totalRead = 0;
-		try {
-			fos = new FileOutputStream("content/"+filename);
-			while(true) {
-				Message newData = (Message)is.readObject();
-				byte[] dataToWrite = newData.getMessageData();
-				totalRead += dataToWrite.length;
-				fos.write(dataToWrite);
-				if(totalRead >= size) break;
-			}
-			fos.close();
-		} catch (FileNotFoundException e1) {
-			e1.printStackTrace();
-	    } catch (ClassNotFoundException e2) {
-			e2.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+    public void workerHandleUploadRequest() {
+        try {
+            String fileName = is.readUTF();
+            long fileSize = is.readLong();
+            FileOutputStream fos = new FileOutputStream("content/"+fileName);
+            byte[] buf = new byte[2048];
+            int read = 0;
+            long totalRead = 0;
+            while ((read = is.read(buf, 0, Math.min(buf.length, (int) (fileSize - totalRead)))) > 0) {
+                totalRead += read;
+                fos.write(buf, 0, read);
+                // Send ACK for each packet
+                os.writeUTF("ACK");
+            }
+        fos.close();
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
     }
     
     // method that is called when the server recieves a request to download a file
