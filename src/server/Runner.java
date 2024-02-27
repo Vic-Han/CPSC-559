@@ -39,6 +39,9 @@ public class Runner extends Thread {
           case(codes.UPLOADREQUEST):
             protocolHandler.workerHandleUploadRequest();
             break;
+          case(codes.LOGINREQUEST):
+            protocolHandler.handleLoginRequest();
+            break;
         }
       }
       

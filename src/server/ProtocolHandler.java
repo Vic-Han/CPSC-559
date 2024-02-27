@@ -72,8 +72,19 @@ public class ProtocolHandler {
 
     // method that is called when the server recieves a request to login
     // should return the userID to the client, -1 on failure
-    private void handleLoginRequest(String username, String password, String ClientIP, int ClientPort) {
-        
+    public void handleLoginRequest() {
+        try{
+            String username = is.readUTF();
+            String password = is.readUTF();
+            //if password matches for username
+            if(true) {
+                os.writeByte(codes.OK);
+            } else {
+                os.writeByte(codes.ERR);
+            }
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // method that is called when the server recieves a request to register
