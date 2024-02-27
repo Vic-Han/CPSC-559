@@ -3,14 +3,59 @@ package server;
 import Utilities.*;
 
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+
+//source for encoding/decoding: https://www.baeldung.com/java-string-to-byte-array
+
 // static class that provides the parsing of the raw binary data
 public class MasterParser {
     // utilities to parse the raw binary and extracts the arguments of the message
 
     // Returns a pair of the message type and the arguments: username & password
-    private static Pair<String,String> parseLogin(byte[] data, int dataSize){
-    	return null;
+    private static Pair<String,String> parseLogin(byte[] usernameBytes,byte[] passwordBytes){// int dataSize){
+
+        String username = new String(usernameBytes, StandardCharsets.UTF_8);
+        String password = new String(passwordBytes, StandardCharsets.UTF_8);
+        Pair <String,String> info = new Pair<>(username, password);//new Pair<username, password>; 
+        return info;
+    	//return null;
+    }
+
+    //source: https://stackoverflow.com/questions/6406542/split-byte-array-with-string
+        //source 2: https://stackoverflow.com/questions/58767601/how-to-split-a-byte-array-that-contains-multiple-lines-in-java
+
+    // private static String splitDataBytesIntoStrings(byte[] data, int size, int start, int end)
+    // {
+    //     for(int i = start; start <= end; start++)
+    //     {
+
+    //     }
+    //     return null;
+    // }
+
+    //another way to do it 
+    private static Pair<String,String> parseLogin2(byte[] data, int[] dataSizes)
+    {
+        int startUserName = 0; 
+        int userLength = dataSizes[0];
+        //int endUserName = startUserName + (userLength - 1); //array control end
+        int endUserName = startUserName + userLength; 
+        int passLength = dataSizes[1];
+        int startPass = startUserName + (userLength + 1); 
+        int endPass = startPass + passLength; 
+        String userName = new String(data, startUserName, endUserName, StandardCharsets.UTF_8);
+        String pass = new String(data, startPass, endPass, StandardCharsets.UTF_8); 
+
+        return new Pair<>(userName, pass);
+        
+        //String userName = splitDataBytesIntoStrings(data, userLength, startUserName, endUserName);
+        //String pass = splitDataBytesIntoStrings(data, passLength, startPass, endPass);
+
+
+        //datasizes
+        //String username = 
+        //return null;
     }
 
     // Returns a pair of the message type and the arguments: username & password
