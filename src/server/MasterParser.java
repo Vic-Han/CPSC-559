@@ -44,7 +44,7 @@ public class MasterParser {
     	return 0;
     }
     
-    public static Pair<Long, String> wparseUpload(byte[] data, int[] datasize) {
+    public static Pair<Long, String> workerParseUpload(byte[] data, int[] datasize) {
     	byte[] lBytes = Arrays.copyOfRange(data, 0, datasize[0]);
     	byte[] sBytes = Arrays.copyOfRange(data, datasize[0], datasize[1]);
     	String s = new String(sBytes);
