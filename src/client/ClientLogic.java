@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Map;     
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import Utilities.Pair;
 
 
 
@@ -86,7 +87,7 @@ public class ClientLogic {
     }
     // method that is called when user wants to see all files they can download
     // returns a list of pairs; first entry is the file name, second entry is the owner/permission(owner/shared w me)
-    public static ArrayList<Pair<String, int>> getAllFiles(int userID) {
+    public static ArrayList<Pair<String, Integer>> getAllFiles(int userID) {
 
         return null;
     }
@@ -96,8 +97,9 @@ public class ClientLogic {
     // asks the load balancer/master for a worker that can accept the upload
     // returns the worker IP and port number
     // socket messages should be sent and recived here
-    private static Pair<String, int> sendUploadRequest(String fileName){
-
+    private static Pair<String, Integer> sendUploadRequest(String fileName){
+        //changed int to Integer as java must use a wrapper (Integer) for generic types rather than primitive (int)
+            //src: https://stackoverflow.com/questions/34885463/insert-dimensions-to-complete-expression-referencetype
         return null;
     }
 
@@ -116,7 +118,7 @@ public class ClientLogic {
     //  asks the load balancer/master for a worker that has the file
     // returns the worker IP and port number
     // socket messages should be sent and recived here
-    private static Pair<String, int> sendDownloadRequest(String fileName){
+    private static Pair<String, Integer> sendDownloadRequest(String fileName){
 
         return null;
     }
