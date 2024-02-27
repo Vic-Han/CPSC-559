@@ -39,12 +39,23 @@ public class Message implements Serializable {
     private static final byte GETALLFILESRESPONSE = 15;
     private static final byte FILEDATA = 16;
     private static final byte FILEDATAACK = 17;
+    private static final byte ACK = 52;
 
-    public Message(byte messageType, byte[] messageData, int messageLength, short sourcePort, short destinationPort, String sourceIP, String destinationIP) {
+    public Message(byte messageType, byte[] messageData, int[] dataSizes) {
         this.messageCode = messageType;
         this.messageData = messageData;
-        this.messageLength = messageLength;
-        this.sourcePort = sourcePort;
-        this.destinationPort = destinationPort;
+        this.dataSizes = dataSizes;
+    }
+    
+    public byte getMessageType() {
+    	return messageCode;
+    }
+    
+    public byte[] getMessageData() {
+    	return messageData;
+    }
+    
+    public int[] getDataSizes() {
+    	return dataSizes;
     }
 }   
