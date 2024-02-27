@@ -158,8 +158,14 @@ public class ProtocolHandler {
 
     // method that is called when the server recieves a request to see all files the user can download
     // should tell the client the file names and permissions(owner/shared w me)
-    private void handleGetAllFilesRequest(int userID, String ClientIP, int ClientPort) {
-
+    public void handleGetAllFilesRequest() {
+        //receive username
+        //query for all relevant files
+        //for all files
+            //send name
+            //send size
+            //send owner
+            //send date uploaded?
     }
 
     // method that is called when the server recieves a request to delete a file
