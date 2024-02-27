@@ -3,6 +3,7 @@ package server;
 import java.io.IOException;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileInputStream;
 
@@ -40,7 +41,7 @@ public class ProtocolHandler {
                 // Send ACK for each packet
                 os.writeUTF("ACK");
             }
-        fos.close();
+            fos.close();
         } catch(IOException e) {
             e.printStackTrace();
         }
@@ -53,21 +54,30 @@ public class ProtocolHandler {
     	// Get available worker
     	// send info back to client
     	//WORKER
-    	// parse message for length and filename
     	
-    	// zach's code
-    	/*
-    	 	int read;
+    }
+
+    public void workerHandleDownloadRequest() {
+        try {
+            String fileName = is.readUTF();
+            File file = new File("content/"+fileName);
+            FileInputStream fis = new FileInputStream(file);
+            os.writeLong(file.length());
+            byte[] buf = new byte[2048];
+            int read;
             while ((read = fis.read(buf)) > 0) {
-                out.write(buf, 0, read);
+                os.write(buf, 0, read);
                 // Wait for ACK
-                String ack = in.readUTF();
+                String ack = is.readUTF();
                 if (!"ACK".equals(ack)) {
                     System.out.println("Error in transmission, stopping.");
                     break;
                 }
             }
-    	 */
+            fis.close();
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // method that is called when the server recieves a request to login
@@ -82,6 +92,7 @@ public class ProtocolHandler {
                 os.writeByte(codes.OK);
             } else {
                 os.writeByte(codes.ERR);
+                os.writeUTF("Error message");
             }
         } catch(IOException e) {
             e.printStackTrace();
@@ -90,20 +101,59 @@ public class ProtocolHandler {
 
     // method that is called when the server recieves a request to register
     // should return the userID to the client, -1 on failure
-    private void handleRegisterRequest(String username, String password, String ClientIP, int ClientPort) {
-
+    public void handleRegisterRequest() {
+        try{
+            String username = is.readUTF();
+            String password = is.readUTF();
+            System.out.println("Username: " + username + " Password: " + password);
+            //Register user and return status
+            if(true) {
+                os.writeByte(codes.OK);
+            } else {
+                os.writeByte(codes.ERR);
+                os.writeUTF("Error message");
+            }
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // method that is called when the server recieves a request to share a file
     // should return a success or failure message to the client
-    private void handleShareRequest(String fileName, String sharedUser, int userID, String ClientIP, int ClientPort) {
-
+    public void handleShareRequest() {
+        try {
+            String filename = is.readUTF();
+            String owner = is.readUTF();
+            String sharedTo = is.readUTF();
+            //add share permission to database
+            if(true) {
+                os.writeByte(codes.OK);
+            } else {
+                os.writeByte(codes.ERR);
+                os.writeUTF("Error message");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // method that is called when the server recieves a request to unshare a file
     // should return a success or failure message to the client
-    private void handleUnshareRequest(String fileName, String sharedUser, int userID, String ClientIP, int ClientPort) {
-
+    public void handleUnshareRequest() {
+        try {
+            String filename = is.readUTF();
+            String owner = is.readUTF();
+            String sharedTo = is.readUTF();
+            //add share permission to database
+            if(true) {
+                os.writeByte(codes.OK);
+            } else {
+                os.writeByte(codes.ERR);
+                os.writeUTF("Error message");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // method that is called when the server recieves a request to see all files the user can download
@@ -114,7 +164,19 @@ public class ProtocolHandler {
 
     // method that is called when the server recieves a request to delete a file
     // should return a success or failure message to the client
-    private void handleDeleteRequest(String fileName, int userID, String ClientIP, int ClientPort) {
-
+    public void handleDeleteRequest() {
+        try {
+            String filename = is.readUTF();
+            String owner = is.readUTF();
+            //attempt to delete
+            if(true) {
+                os.writeByte(codes.OK);
+            } else {
+                os.writeByte(codes.ERR);
+                os.writeUTF("Error message");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
