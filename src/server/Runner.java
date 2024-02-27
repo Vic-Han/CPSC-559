@@ -26,14 +26,17 @@ public class Runner extends Thread {
     DataOutputStream os = null;
     //ProtocolHandler handler = new ProtocolHandler(os, is);
 
+   System.out.println("Runner started");
     // Get these I/O streams
     try {
       is = new DataInputStream(this.s.getInputStream());
       os = new DataOutputStream(this.s.getOutputStream());
       
       ProtocolHandler protocolHandler = new ProtocolHandler(os, is);
+      System.out.println("streams open");
       while(true) {
         byte code = is.readByte();
+        System.out.println("Code: " + code);
         if(code == codes.QUIT) break;
         switch(code) {
           case(codes.UPLOADREQUEST):
@@ -56,14 +59,20 @@ public class Runner extends Thread {
             break;
           case(codes.DELETEREQUEST):
             protocolHandler.handleDeleteRequest();
+          	break;
+          default:
+        	System.out.println("Unknown command given");
+        	break;
         }
+        break;
       }
       
       this.s.close();
 
     }
     catch (IOException e) {
-      System.out.println("IO Exception: " + e);
+    	System.out.println("IO Exception: " + e);
+    	//e.printStackTrace();
     }
   }
 
