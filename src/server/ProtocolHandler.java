@@ -76,6 +76,7 @@ public class ProtocolHandler {
         try{
             String username = is.readUTF();
             String password = is.readUTF();
+            System.out.println("Username: " + username + " Password: " + password);
             //if password matches for username
             if(true) {
                 os.writeByte(codes.OK);
