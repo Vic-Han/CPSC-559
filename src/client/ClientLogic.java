@@ -22,8 +22,8 @@ import Utilities.Message;
 // class is static because it is not meant to be instantiated by several threads, may change later
 public class ClientLogic {
 
-    private  DataInputStream in;
-    private  DataOutputStream out;
+    DataInputStream in;
+    DataOutputStream out;
     private  String host;
     private  int port;
     Socket socket; 
@@ -40,6 +40,8 @@ public class ClientLogic {
     {
         this.host = host; 
         this.port = port; 
+        this.in = null; 
+        this.out = null;
     }
 
     //get address, instantiate socket, instantiate input/output data streams
@@ -126,7 +128,7 @@ public class ClientLogic {
 
             break;
             case codes.UNSHAREREQUEST:
-            unshareRequest();
+            byte response = unshareRequest();
             // if(response == codes.NOSUCHFILE)
             // {
             //     //do something
@@ -137,13 +139,15 @@ public class ClientLogic {
             // }
             break;
             case codes.DELETEREQUEST:
-            deleteRequest();
+            byte response = deleteRequest();
             break;
             case codes.GETALLFILESREQUEST:
-            getAllFilesRequest();
+            byte response = getAllFilesRequest();
             break;
             default:
+            break;
         }
+        break;
     }
 
     public static int loginRequest(String username, String password) {
@@ -229,9 +233,10 @@ public class ClientLogic {
             return codes.UPLOADFAIL; 
         }
 
-    }catch(IOException e)
+    }catch(IOException e){
         e.printStackTrace();
-        return codes.ERR; 
+        //return codes.ERR; 
+    }
     }
 
     private byte downloadRequest(String filename, int userID){
@@ -396,8 +401,34 @@ public class ClientLogic {
         }
     }
 
-    private void getAllFilesRequest(int userID)
+    private byte getAllFilesRequest(int userID)
     {
+        out.writeByte(codes.GETALLFILESREQUEST); 
+
+        byte response = in.readByte();
+
+        if(response == codes.GETALLFILESRESPONSE)
+        {
+            //do stuff
+
+
+            //PROBABLY SHOULD HAVE SOME SORT OF INSTANCE OF USERID TO ACTUALLY VALIDATE AGAINST OR THE GUI INPUTS THE USERID NOT THE USER THEMSELVES OR THEY COULD RETRIEVE OTHER PEOPLES FILES
+            out.writeInt(userID); 
+            byte doesUserExist = in.readByte(); 
+            if(doesUserExist == codes.USEREXISTS)
+            {
+                byte finalResponse = in.readByte(); 
+                return finalResponse; 
+            }
+            else
+            {
+                return codes.ERR; //wrong user input somehow
+            }
+        }
+        else
+        {
+            return codes.ERR; 
+        }
 
     }
 

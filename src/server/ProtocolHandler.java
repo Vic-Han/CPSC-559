@@ -252,7 +252,27 @@ public class ProtocolHandler {
 
     // method that is called when the server recieves a request to see all files the user can download
     // should tell the client the file names and permissions(owner/shared w me)
-    private void handleGetAllFilesRequest(int userID, String ClientIP, int ClientPort) {
+    // private void handleGetAllFilesRequest(int userID, String ClientIP, int ClientPort) {
+
+    // }
+
+    public void handleAllFilesRequest(){
+        try{
+        os.writeByte(codes.GETALLFILESREQUEST);
+
+        int userID = is.readInt(); 
+
+        //check if userID is actually in system 
+        //if(valid user id from caller (client)){
+            os.writeByte(codes.USEREXISTS); 
+            os.writeByte(codes.GETALLSUCCESS); //if successful 
+            //if unsuccessful os.writeByte(codes.GETALLFAIL);
+        //}
+        }catch(Exception e)
+        {
+            e.printStackTrace();
+            //os.writeByte(codes.GETALLFAIL);
+        }
 
     }
 
