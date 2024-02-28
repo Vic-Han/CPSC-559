@@ -3,6 +3,8 @@ package client;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;     
@@ -24,8 +26,8 @@ public class ClientLogic {
 
     DataInputStream in;
     DataOutputStream out;
-    private  String host;
-    private  int port;
+    //private  String host;
+    //private  int port;	neither used? commented out for now
     Socket socket; 
     //private int userID;
 
@@ -38,50 +40,61 @@ public class ClientLogic {
     //constructor called when given host and port to instantiate variables associated
     public ClientLogic(String host, int port)
     {
-        this.host = host; 
-        this.port = port; 
-        this.in = null; 
-        this.out = null;
-        this.socket = null; 
+        //this.host = host; 
+        //this.port = port;  
+        try {
+        //Host string into useable IP address
+	    InetAddress address = InetAddress.getByName(host);
+	
+	    //Instantiate socket with given IP address and port number
+	    this.socket = new Socket(address, port);
+	
+	    //instantiate output/input streams
+	    this.out = new DataOutputStream(this.socket.getOutputStream());
+	    this.in = new DataInputStream(this.socket.getInputStream());
+        } catch (IOException e) {
+        	e.printStackTrace();
+        	this.socket = null;
+        	this.out = null;
+        	this.in = null;
+        }
     }
 
-    public static void main(String[] args) throws IOException{
-        //ClientLogic client = new ClientLogic(); 
-        //client.start("localhost",1969); not sure how to go about this part 
-        this.start("localhost", 1969);
-    }
-
-    //get address, instantiate socket, instantiate input/output data streams
+    /*//get address, instantiate socket, instantiate input/output data streams
     public void start()
     {
-        //Host string into useable IP address
-        InetAddress address = InetAddress.getByName(host);
-
-        //Instantiate socket with given IP address and port number
-        this.socket = new Socket(address, port);
-
-        //instantiate output/input streams
-        out = new ObjectOutputStream(this.socket.getOutputStream());
-        in = new ObjectInputStream(this.socket.getInputStream());
-
-
-        //Loop while connecte
-        bool inputCodeBool = true; 
-        while(inputCodeBool)
-        {
-            //handle inputs
-            byte inputCode = in.readByte(); 
-            if(inputCode == codes.QUIT)
-            {
-                //quit
-                exit(0);
-            }
-            else
-            {
-                inputCodeHandler(inputCode);
-            }
-                        //get some sort of response from inputCodeHandler for output or write with class level out 
-        }
+    	try {
+	        //Host string into useable IP address
+	        InetAddress address = InetAddress.getByName(host);
+	
+	        //Instantiate socket with given IP address and port number
+	        this.socket = new Socket(address, port);
+	
+	        //instantiate output/input streams
+	        out = new DataOutputStream(this.socket.getOutputStream());
+	        in = new DataInputStream(this.socket.getInputStream());
+	
+	        /*
+	        //Loop while connecte
+	        boolean inputCodeBool = true; 
+	        while(inputCodeBool)
+	        {
+	            //handle inputs
+	            byte inputCode = in.readByte(); 
+	            if(inputCode == codes.QUIT)
+	            {
+	                //quit
+	                break;
+	            }
+	            else
+	            {
+	                inputCodeHandler(inputCode);
+	            }
+	                        //get some sort of response from inputCodeHandler for output or write with class level out 
+	        }
+    	} catch(IOException e) {
+    		e.printStackTrace();
+    	}
 
     }
 
@@ -151,8 +164,16 @@ public class ClientLogic {
         }
         break;
     }
-
-    public static int loginRequest(String username, String password) {
+	*/
+    
+    public void stop() {
+    	try {
+    		if(!socket.isClosed()) socket.close();
+    	} catch(IOException e) {
+    		e.printStackTrace();
+    	}
+    }
+    public int loginRequest(String username, String password) {
     	try {
     		out.writeByte(codes.LOGINREQUEST);
     		out.writeUTF(username);
@@ -171,7 +192,7 @@ public class ClientLogic {
     	}
     }
 
-    public static int registerRequest(String username, String password) {
+    public int registerRequest(String username, String password) {
     	try {
             out.writeByte(codes.REGISTERREQUEST);
             byte response = in.readByte(); 
@@ -209,36 +230,33 @@ public class ClientLogic {
   
 
     private byte uploadRequest(File file, String fileName){
-        out.writeByte(codes.UPLOADREQUEST); //send request to server
-        byte response = in.readByte();  //get response from server
         try{
-        if(response == codes.UPLOADRESPONSE) //server responded with valid code so we can proceed 
-        {
-            long fileSize = file.length(); 
-            out.writeLong(fileSize); //send fileSize to the runner so that they can determine storage/server to use and other stuffs
-            FileInputStream fileIS = new FileInputStream(file); //instantiate FileInputStream to get file contents to send over the socket input stream after
-            byte[] buffer = new byte[4096]; //buffer of 4kb
-            int bytesRead; 
-
-            while(bytesRead = (fileIS.read(buffer)) != -1)//while file still has contents to read we should read them 
-            {
-                out.write(buffer, 0, bytesRead);
-            }
-
-            fileIS.close();
-            System.out.println("File " + fileName + " has been uploaded.");
-            return codes.UPLOADSUCCESS; 
-
+        	out.writeByte(codes.UPLOADREQUEST); //send request to server
+            byte response = in.readByte();  //get response from server
+        	if(response == codes.UPLOADRESPONSE) //server responded with valid code so we can proceed 
+        	{
+	            long fileSize = file.length(); 
+	            out.writeLong(fileSize); //send fileSize to the runner so that they can determine storage/server to use and other stuffs
+	            FileInputStream fileIS = new FileInputStream(file); //instantiate FileInputStream to get file contents to send over the socket input stream after
+	            byte[] buffer = new byte[4096]; //buffer of 4kb
+	            int bytesRead; 
+	
+	            while((bytesRead = (fileIS.read(buffer))) != -1)//while file still has contents to read we should read them 
+	            {
+	                out.write(buffer, 0, bytesRead);
+	            }
+	            fileIS.close();
+	            System.out.println("File " + fileName + " has been uploaded.");
+	            return codes.UPLOADSUCCESS; 
+        	}
+        	else{
+        		System.out.println("Something went wrong when trying to upload, try again");
+        		return codes.UPLOADFAIL; 
+        	}
+        }catch(IOException e){
+        	e.printStackTrace();
+        	return codes.ERR; 
         }
-        else{
-            System.out.println("Something went wrong when trying to upload, try again");
-            return codes.UPLOADFAIL; 
-        }
-
-    }catch(IOException e){
-        e.printStackTrace();
-        //return codes.ERR; 
-    }
     }
 
     private byte downloadRequest(String filename, int userID){
@@ -247,7 +265,7 @@ public class ClientLogic {
             byte response = in.readByte(); 
             if(response == codes.DOWNLOADRESPONSE)
             {
-                out.writeUTF(fileName);//send filename to server 
+                out.writeUTF(filename);//send filename to server 
 
 
                 File file = new File(filename);
@@ -270,7 +288,7 @@ public class ClientLogic {
                     totalRead += bytesRead;
                 }
                 fileOS.close();
-                System.out.println("File " + fileName + " has been downloaded.");
+                System.out.println("File " + filename + " has been downloaded.");
                 return codes.DOWNLOADSUCCESS;
             }
             else if(response == codes.NOSUCHFILE)
@@ -294,144 +312,160 @@ public class ClientLogic {
 
     //fileName is the name of the file which user wants to share 
     private byte shareRequest(String fileName, String sharedUser, int idSharer){
-        out.sendByte(codes.SHAREREQUEST); //send request to server to start share request functionality 
-        byte response = in.readByte();  //get response that server is now running the share request functionality 
-        
-
-        if(response == codes.SHARERESPONSE) //valid response from server
-        {
-            out.writeUTF(fileName); //send file name so we can check if it exists
-            byte doesFileExist = in.readByte();  //read from server to see if the file actually exists
-            //if file doesn't exist we should return as we can't share something not in the system duh
-            if(doesFileExist == codes.NOSUCHFILE)
-            {
-                return codes.NOSUCHFILE; 
-            }
-
-            out.writeUTF(sharedUser);
-            byte doesUserExist = in.readByte(); 
-
-            //if the user to share with doesn't exist then we shouldn't share with them 
-            if(doesUserExist == codes.NOSUCHUSER)
-            {
-                return codes.NOSUCHUSER; 
-            }
-
-            out.writeInt(idSharer);
-            byte serverResponse = in.readByte(); 
-
-            //byte response = in.readByte(); 
-           // out.writeInt(idReceiver);  
-
-            //validity checks already done.
-            return serverResponse; 
-            //return codes.OK
-            //maybe implement codes.SHARESUCCESS
-        }
-        // else {
-        //     return codes.ERR; //something happened not sure if this can actually get hit though 
-        // }
-        
+    	try {
+	        out.writeByte(codes.SHAREREQUEST); //send request to server to start share request functionality 
+	        byte response = in.readByte();  //get response that server is now running the share request functionality 
+	
+	        if(response == codes.SHARERESPONSE) //valid response from server
+	        {
+	            out.writeUTF(fileName); //send file name so we can check if it exists
+	            byte doesFileExist = in.readByte();  //read from server to see if the file actually exists
+	            //if file doesn't exist we should return as we can't share something not in the system duh
+	            if(doesFileExist == codes.NOSUCHFILE)
+	            {
+	                return codes.NOSUCHFILE; 
+	            }
+	
+	            out.writeUTF(sharedUser);
+	            byte doesUserExist = in.readByte(); 
+	
+	            //if the user to share with doesn't exist then we shouldn't share with them 
+	            if(doesUserExist == codes.NOSUCHUSER)
+	            {
+	                return codes.NOSUCHUSER; 
+	            }
+	
+	            out.writeInt(idSharer);
+	            byte serverResponse = in.readByte(); 
+	
+	            //byte response = in.readByte(); 
+	           // out.writeInt(idReceiver);  
+	
+	            //validity checks already done.
+	            return serverResponse; 
+	            //return codes.OK
+	            //maybe implement codes.SHARESUCCESS
+	        }
+	        else {
+	            return codes.ERR; //something happened not sure if this can actually get hit though 
+	        }
+    	}catch(IOException e) {
+    		e.printStackTrace();
+    		return codes.ERR;
+    	}
 
     }
     
-    private void unshareRequest(String fileName, String sharedUser, int idSharer){
-        out.sendByte(codes.UNSHAREREQUEST); //send request to server to start share request functionality 
-        byte response = in.readByte();  //get response that server is now running the share request functionality 
-        
-
-        if(response == codes.UNSHARERESPONSE) //valid response from server
-        {
-            out.writeUTF(fileName); //send file name so we can check if it exists
-            byte doesFileExist = in.readByte();  //read from server to see if the file actually exists
-            //if file doesn't exist we should return as we can't share something not in the system duh
-            if(doesFileExist == codes.NOSUCHFILE)
-            {
-                return codes.NOSUCHFILE; 
-            }
-
-            out.writeUTF(sharedUser);
-            byte doesUserExist = in.readByte(); 
-
-            //if the user to share with doesn't exist then we shouldn't share with them 
-            if(doesUserExist == codes.NOSUCHUSER)
-            {
-                return codes.NOSUCHUSER; 
-            }
-
-            out.writeInt(idSharer);
-            byte serverResponse = in.readByte(); 
-
-            //byte response = in.readByte(); 
-           // out.writeInt(idReceiver);  
-
-            //validity checks already done.
-            return serverResponse; 
-            //return codes.OK
-        }
-        //else{ return codes.ERR;} not sure if this can get hit 
-
+    private byte unshareRequest(String fileName, String sharedUser, int idSharer){
+    	try {
+	        out.writeByte(codes.UNSHAREREQUEST); //send request to server to start share request functionality 
+	        byte response = in.readByte();  //get response that server is now running the share request functionality 
+	        
+	
+	        if(response == codes.UNSHARERESPONSE) //valid response from server
+	        {
+	            out.writeUTF(fileName); //send file name so we can check if it exists
+	            byte doesFileExist = in.readByte();  //read from server to see if the file actually exists
+	            //if file doesn't exist we should return as we can't share something not in the system duh
+	            if(doesFileExist == codes.NOSUCHFILE)
+	            {
+	                return codes.NOSUCHFILE; 
+	            }
+	
+	            out.writeUTF(sharedUser);
+	            byte doesUserExist = in.readByte(); 
+	
+	            //if the user to share with doesn't exist then we shouldn't share with them 
+	            if(doesUserExist == codes.NOSUCHUSER)
+	            {
+	                return codes.NOSUCHUSER; 
+	            }
+	
+	            out.writeInt(idSharer);
+	            byte serverResponse = in.readByte(); 
+	
+	            //byte response = in.readByte(); 
+	           // out.writeInt(idReceiver);  
+	
+	            //validity checks already done.
+	            return serverResponse; 
+	            //return codes.OK
+	        }
+	        else{ return codes.ERR;} //not sure if this can get hit 
+    	} catch(IOException e) {
+    		e.printStackTrace();
+    		return codes.ERR;
+    	}
     }
 
     private byte deleteRequest(String filePath, int userID){
-        out.sendByte(codes.DELETEREQUEST); //send request to server
-
-        byte response = in.readByte(); //get servers response to request
-        if(response == codes.DELETERESPONSE) //server responded so we can start doing the important stuff
-        {
-            out.sendUTF(filePath); 
-
-            byte doesFileExist = in.readByte(); 
-
-            if(doesFileExist == codes.NOSUCHFILE)
-            {
-                return codes.NOSUCHFILE; 
-            }
-
-            //check if the user owns it with USEREXISTS
-
-            out.sendInt(userID); 
-
-            byte doesUserExist = in.readByte(); 
-            if(doesUserExist == codes.NOSUCHUSER)
-            {
-                return codes.NOSUCHUSER; 
-            }
-
-            byte response = in.ReadByte(); //should be returning DELETESUCCESS REALISTICALLY BUT SINCE THE CALL IS BEING SENT WE MUST READ IT OR ELSE IT WILL MESS WITH SOMETHING LATER 
-            return response; 
-        }
+    	try {
+	        out.writeByte(codes.DELETEREQUEST); //send request to server
+	
+	        byte response = in.readByte(); //get servers response to request
+	        if(response == codes.DELETERESPONSE) //server responded so we can start doing the important stuff
+	        {
+	            out.writeUTF(filePath); 
+	
+	            byte doesFileExist = in.readByte(); 
+	
+	            if(doesFileExist == codes.NOSUCHFILE)
+	            {
+	                return codes.NOSUCHFILE; 
+	            }
+	
+	            //check if the user owns it with USEREXISTS
+	
+	            out.writeInt(userID); 
+	
+	            byte doesUserExist = in.readByte(); 
+	            if(doesUserExist == codes.NOSUCHUSER)
+	            {
+	                return codes.NOSUCHUSER; 
+	            }
+	
+	            response = in.readByte(); //should be returning DELETESUCCESS REALISTICALLY BUT SINCE THE CALL IS BEING SENT WE MUST READ IT OR ELSE IT WILL MESS WITH SOMETHING LATER 
+	            return response; 
+	        } else return codes.ERR;
+    	} catch(IOException e) {
+    		e.printStackTrace();
+    		return codes.ERR;
+    	}
     }
 
     private byte getAllFilesRequest(int userID)
     {
-        out.writeByte(codes.GETALLFILESREQUEST); 
-
-        byte response = in.readByte();
-
-        if(response == codes.GETALLFILESRESPONSE)
-        {
-            //do stuff
-
-
-            //PROBABLY SHOULD HAVE SOME SORT OF INSTANCE OF USERID TO ACTUALLY VALIDATE AGAINST OR THE GUI INPUTS THE USERID NOT THE USER THEMSELVES OR THEY COULD RETRIEVE OTHER PEOPLES FILES
-            out.writeInt(userID); 
-            byte doesUserExist = in.readByte(); 
-            if(doesUserExist == codes.USEREXISTS)
-            {
-                byte finalResponse = in.readByte(); 
-                return finalResponse; 
-            }
-            else
-            {
-                return codes.ERR; //wrong user input somehow
-            }
-        }
-        else
-        {
-            return codes.ERR; 
-        }
-
+    	try {
+	        out.writeByte(codes.GETALLFILESREQUEST); 
+	
+	        byte response = in.readByte();
+	
+	        if(response == codes.GETALLFILESRESPONSE)
+	        {
+	            //do stuff
+	
+	
+	            //PROBABLY SHOULD HAVE SOME SORT OF INSTANCE OF USERID TO ACTUALLY VALIDATE AGAINST OR THE GUI INPUTS THE USERID NOT THE USER THEMSELVES OR THEY COULD RETRIEVE OTHER PEOPLES FILES
+	            out.writeInt(userID); 
+	            byte doesUserExist = in.readByte(); 
+	            if(doesUserExist == codes.USEREXISTS)
+	            {
+	                byte finalResponse = in.readByte(); 
+	                return finalResponse; 
+	            }
+	            else
+	            {
+	                return codes.ERR; //wrong user input somehow
+	            }
+	        }
+	        else
+	        {
+	            return codes.ERR; 
+	        }
+    	} catch(IOException e) {
+    		e.printStackTrace();
+    		return codes.ERR;
+    	}
     }
 
 
