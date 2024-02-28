@@ -24,9 +24,9 @@ public class ProtocolHandler {
     // method that is called when the server recieves a request to upload a file
     // should tell the client the worker IP and port number
     // should give the client an authentication token to talk to the worker(future)
-    private void handleUploadRequest(String fileName, int userID, String ClientIP, int ClientPort) {
+    // private void handleUploadRequest(String fileName, int userID, String ClientIP, int ClientPort) {
     	
-    }
+    // }
     
     public void workerHandleUploadRequest() {
         try {
@@ -50,13 +50,13 @@ public class ProtocolHandler {
     
     // method that is called when the server recieves a request to download a file
     // should tell the client the worker IP and port number that has the download
-    private void handleDownloadRequest(String fileName, int userID, String ClientIP, int ClientPort) {
-    	//LOAD BALANCER
-    	// Get available worker
-    	// send info back to client
-    	//WORKER
+    // private void handleDownloadRequest(String fileName, int userID, String ClientIP, int ClientPort) {
+    // 	//LOAD BALANCER
+    // 	// Get available worker
+    // 	// send info back to client
+    // 	//WORKER
     	
-    }
+    // }
 
     public void workerHandleDownloadRequest() {
         try {
@@ -107,16 +107,32 @@ public class ProtocolHandler {
     // should return the userID to the client, -1 on failure
     public void handleRegisterRequest() {
         try{
+            //send respone code back
+            os.writeByte(codes.REGISTERRESPONSE);
             String username = is.readUTF();
             String password = is.readUTF();
             System.out.println("Username: " + username + " Password: " + password);
-            //Register user and return status
-            if(true) {
-                os.writeByte(codes.OK);
-            } else {
-                os.writeByte(codes.REGISTERFAIL);
-                os.writeUTF("Error message");
+
+            //if username already taken or password blank should return error code 
+            //if (username already in database){
+            //os.writeByte(codes.USEREXISTS); return}
+
+            if(password.length() <= 2)
+            {
+                os.writeByte(codes.PASSWORDINVALID);
+                return; 
             }
+
+            //successful registration 
+            os.writeByte(codes.REGISTERSUCCESS);
+
+            //Register user and return status
+            // if(true) {
+            //     os.writeByte(codes.OK);
+            // } else {
+            //     os.writeByte(codes.REGISTERFAIL);
+            //     os.writeUTF("Error message");
+            // }
         } catch(IOException e) {
             e.printStackTrace();
         }
@@ -275,15 +291,19 @@ public class ProtocolHandler {
             os.writeByte(codes.USEREXISTS); //check if this person is actually the owner of the file to stop malicious attempts of file deletions
 
 
+            //DELETE THE FILE IDK HOW YOU'RE DOING IT WITH DATABASE
 
+            //if successful write this back
+            os.writeByte(codes.DELETESUCCESS);
+            //if not successful but somehow user exists and file exists you can write back os.writeByte(codes.DELETEFAIL); 
 
-            //attempt to delete
-            if(true) {
-                os.writeByte(codes.OK);
-            } else {
-                os.writeByte(codes.ERR);
-                os.writeUTF("Error message");
-            }
+            // //attempt to delete
+            // if(true) {
+            //     os.writeByte(codes.OK);
+            // } else {
+            //     os.writeByte(codes.ERR);
+            //     os.writeUTF("Error message");
+            // }
         } catch (IOException e) {
             e.printStackTrace();
         }

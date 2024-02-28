@@ -39,6 +39,12 @@ public class codes {
     public static final byte SHARESUCCESS = 113; 
     public static final byte SHAREFAIL = 114; 
     public static final byte UNSHARESUCCESS = 115; 
-    public static final byte UNSUAREFAIL = 116; 
+    public static final byte UNSHAREFAIL = 116; 
+    public static final byte DELETESUCCESS = 117; 
+    public static final byte DELETEFAIL = 118; 
+    public static final byte GETALLSUCCESS = 119; 
+    public static final byte GETALLFAIL = 120; 
+    public static final byte PASSWORDVALID = 121; 
+    public static final byte PASSWORDINVALID = 122; 
     
 }

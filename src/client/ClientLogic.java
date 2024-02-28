@@ -168,16 +168,32 @@ public class ClientLogic {
     public static int registerRequest(String username, String password) {
     	try {
             out.writeByte(codes.REGISTERREQUEST);
-    		out.writeUTF(username);
-    		out.writeUTF(password);//should be hashed
-    		
-    		byte returned = in.readByte();
-    		if(returned == codes.REGISTERFAIL) {
-    			String msg = in.readUTF();
-    			System.out.println(msg);
-                return codes.REGISTERFAIL;
-    		}
-    		return codes.REGISTERSUCCESS;
+            byte response = in.readByte(); 
+            if(response == codes.REGISTERRESPONSE)
+            {
+                out.writeUTF(username);
+                //byte user = in.readByte(); 
+                //if (user == codes.USEREXISTS) then the user already exists and thus we cant create new user with same name 
+                out.writeUTF(password);//should be hashed
+                byte validPass = in.readByte(); 
+                if(validPass == codes.PASSWORDINVALID)
+                {
+                    return codes.PASSWORDINVALID; 
+                }
+
+
+                byte returned = in.readByte();
+                if(returned == codes.REGISTERFAIL) {
+                    String msg = in.readUTF();
+                    System.out.println(msg);
+                    return codes.REGISTERFAIL;
+                }
+                return codes.REGISTERSUCCESS;
+            }
+            else//some sort of error
+            {
+                return codes.ERR; 
+            }
     	} catch(IOException e) {
     		e.printStackTrace();
             return codes.ERR;
@@ -369,11 +385,18 @@ public class ClientLogic {
 
             out.sendInt(userID); 
 
-            //byte doesUserExist = in
+            byte doesUserExist = in.readByte(); 
+            if(doesUserExist == codes.NOSUCHUSER)
+            {
+                return codes.NOSUCHUSER; 
+            }
+
+            byte response = in.ReadByte(); //should be returning DELETESUCCESS REALISTICALLY BUT SINCE THE CALL IS BEING SENT WE MUST READ IT OR ELSE IT WILL MESS WITH SOMETHING LATER 
+            return response; 
         }
     }
 
-    private void getAllFilesRequest()
+    private void getAllFilesRequest(int userID)
     {
 
     }
