@@ -172,21 +172,66 @@ public class ProtocolHandler {
     // method that is called when the server recieves a request to unshare a file
     // should return a success or failure message to the client
     public void handleUnshareRequest() {
-        try {
-            String filename = is.readUTF();
-            String owner = is.readUTF();
-            String sharedTo = is.readUTF();
-            //add share permission to database
-            if(true) {
-                os.writeByte(codes.OK);
-            } else {
-                os.writeByte(codes.ERR);
-                os.writeUTF("Error message");
-                return; 
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+        try{
+        os.writeByte(codes.UNSHARERESPONSE); //write response to client to tell them we are starting to handle the share request 
+        String filename = is.readUTF();
+
+        //TODO:get file from server if it exists 
+        //byte doesFileExist = 
+        //if (file does not exist){
+            //os.writeByte(codes.NOSUCHFILE);
+            //return; 
+        //}
+        //else{ file must exist
+        os.writeByte(codes.FILEEXISTS); //file must exist so write OK
+        //}
+
+
+        //String owner = is.readUTF();
+        String sharedTo = is.readUTF();
+
+        //TODO: do checks for if the user exists
+        //byte doesUserExist = 
+        //if (user does not exist){
+            //os.writeByte(codes.NOSUCHUSER);
+            //return; 
+        //}
+        
+        os.writeByte(codes.USEREXISTS); 
+        int userID = is.readInt(); //should be valid if gui can check data base , if not we should do checks here on the files and such 
+        //Alternatively, we could get the userID of the sharer IF we instantiate it upon login and return it to the ClientLogic (client)
+
+
+        os.writeByte(codes.UNSHARESUCCESS); 
+        //boolean testValidity = true; 
+        //add share permission to database
+        // if(testValidity) {
+        //     os.writeByte(codes.UNSHARESUCCESSS);
+        // } else {
+        //     os.writeByte(codes.UNSHAREFAIL);
+        //     //os.writeUTF("Error message");
+        // }
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+        // try {
+        //     String filename = is.readUTF();
+        //     String owner = is.readUTF();
+        //     String sharedTo = is.readUTF();
+        //     //add share permission to database
+        //     if(true) {
+        //         os.writeByte(codes.OK);
+        //     } else {
+        //         os.writeByte(codes.ERR);
+        //         os.writeUTF("Error message");
+        //         return; 
+        //     }
+        // } catch (IOException e) {
+        //     e.printStackTrace();
+        // }
+
+
     }
 
     // method that is called when the server recieves a request to see all files the user can download
@@ -199,8 +244,39 @@ public class ProtocolHandler {
     // should return a success or failure message to the client
     public void handleDeleteRequest() {
         try {
+            os.writeByte(codes.DELETEREQUEST); 
+
             String filename = is.readUTF();
-            String owner = is.readUTF();
+
+
+            //TODO:get file from server if it exists 
+            //byte doesFileExist = 
+            //if (file does not exist){
+                //os.writeByte(codes.NOSUCHFILE);
+                //return; 
+            //}
+            //else file must exist
+            os.writeByte(codes.FILEEXISTS); //file must exist so write OK
+            
+
+
+            //
+            int userID = is.readInt();
+
+
+            //TODO: do checks for if the user exists
+            //byte doesUserExist = 
+            //if (user does not exist){
+                //os.writeByte(codes.NOSUCHUSER);
+                //return; 
+            //}
+
+            //else
+            os.writeByte(codes.USEREXISTS); //check if this person is actually the owner of the file to stop malicious attempts of file deletions
+
+
+
+
             //attempt to delete
             if(true) {
                 os.writeByte(codes.OK);

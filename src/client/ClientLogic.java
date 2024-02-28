@@ -22,8 +22,8 @@ import Utilities.Message;
 // class is static because it is not meant to be instantiated by several threads, may change later
 public class ClientLogic {
 
-    private  DataInputStream input;
-    private  DataOutputStream output;
+    private  DataInputStream in;
+    private  DataOutputStream out;
     private  String host;
     private  int port;
     Socket socket; 
@@ -65,6 +65,7 @@ public class ClientLogic {
             if(inputCode == codes.QUIT)
             {
                 //quit
+                exit(0);
             }
             else
             {
@@ -111,16 +112,29 @@ public class ClientLogic {
             {
                 System.out.println("Error in downloading the file, either the connection dropped or you do not have enough storage to store locally");
             }
-            if(response == codes.NOSUCHFILE)
-            {
-                //do something
-            }
+            // if(response == codes.NOSUCHFILE)
+            // {
+            //     //do something
+            // }
+            // if(response == codes.NOSUCHUSER)
+            // {
+            //     //do something
+            // }
             break;
             case codes.SHAREREQUEST:
-            shareRequest();
+            byte response = shareRequest();
+
             break;
             case codes.UNSHAREREQUEST:
             unshareRequest();
+            // if(response == codes.NOSUCHFILE)
+            // {
+            //     //do something
+            // }
+            // if(response == codes.NOSUCHUSER)
+            // {
+            //     //do something
+            // }
             break;
             case codes.DELETEREQUEST:
             deleteRequest();
@@ -134,13 +148,13 @@ public class ClientLogic {
 
     public static int loginRequest(String username, String password) {
     	try {
-    		os.writeByte(codes.LOGINREQUEST);
-    		os.writeUTF(username);
-    		os.writeUTF(password);//should be hashed
+    		out.writeByte(codes.LOGINREQUEST);
+    		out.writeUTF(username);
+    		out.writeUTF(password);//should be hashed
     		
-    		byte returned = is.readByte();
+    		byte returned = in.readByte();
     		if(returned == codes.LOGINFAIL) {
-    			String msg = is.readUTF();
+    			String msg = in.readUTF();
     			System.out.println(msg);
                 return codes.LOGINFAIL; 
     		}
@@ -153,13 +167,13 @@ public class ClientLogic {
 
     public static int registerRequest(String username, String password) {
     	try {
-            os.writeByte(codes.REGISTERREQUEST);
-    		os.writeUTF(username);
-    		os.writeUTF(password);//should be hashed
+            out.writeByte(codes.REGISTERREQUEST);
+    		out.writeUTF(username);
+    		out.writeUTF(password);//should be hashed
     		
-    		byte returned = is.readByte();
+    		byte returned = in.readByte();
     		if(returned == codes.REGISTERFAIL) {
-    			String msg = is.readUTF();
+    			String msg = in.readUTF();
     			System.out.println(msg);
                 return codes.REGISTERFAIL;
     		}
@@ -173,20 +187,20 @@ public class ClientLogic {
   
 
     private byte uploadRequest(File file, String fileName){
-        os.writeByte(codes.UPLOADREQUEST); //send request to server
-        byte response = is.readByte();  //get response from server
+        out.writeByte(codes.UPLOADREQUEST); //send request to server
+        byte response = in.readByte();  //get response from server
         try{
         if(response == codes.UPLOADRESPONSE) //server responded with valid code so we can proceed 
         {
             long fileSize = file.length(); 
-            os.writeLong(fileSize); //send fileSize to the runner so that they can determine storage/server to use and other stuffs
+            out.writeLong(fileSize); //send fileSize to the runner so that they can determine storage/server to use and other stuffs
             FileInputStream fileIS = new FileInputStream(file); //instantiate FileInputStream to get file contents to send over the socket input stream after
             byte[] buffer = new byte[4096]; //buffer of 4kb
             int bytesRead; 
 
             while(bytesRead = (fileIS.read(buffer)) != -1)//while file still has contents to read we should read them 
             {
-                os.write(buffer, 0, bytesRead);
+                out.write(buffer, 0, bytesRead);
             }
 
             fileIS.close();
@@ -201,15 +215,16 @@ public class ClientLogic {
 
     }catch(IOException e)
         e.printStackTrace();
+        return codes.ERR; 
     }
 
     private byte downloadRequest(String filename, int userID){
         try{
-            os.writeByte(codes.DOWNLOADREQUEST);
+            out.writeByte(codes.DOWNLOADREQUEST);
             byte response = in.readByte(); 
             if(response == codes.DOWNLOADRESPONSE)
             {
-                os.writeUTF(fileName);//send filename to server 
+                out.writeUTF(fileName);//send filename to server 
 
 
                 File file = new File(filename);
@@ -217,7 +232,7 @@ public class ClientLogic {
                 file.createNewFile(); //ensures that it doesn't already exist
                 //
 
-                long fileSize = is.readLong(); 
+                long fileSize = in.readLong(); 
                 
                 FileOutputStream fileOS = new FileOutputStream(file, false); //false so it doesn't append to the file if it exists (we could use this to resume downloads if one fails later potentially)
 
@@ -227,7 +242,7 @@ public class ClientLogic {
 
                 while(totalRead < fileSize)
                 {
-                    bytesRead = is.read(buffer, 0, buffer.length); 
+                    bytesRead = in.read(buffer, 0, buffer.length); 
                     fileOS.write(buffer,0,bytesRead);
                     totalRead += bytesRead;
                 }
@@ -250,27 +265,28 @@ public class ClientLogic {
         {
             //can happen if user is out of storage space and/or connection lost to server
             e.printStackTrace();
+            return codes.ERR; 
         }
     }
 
     //fileName is the name of the file which user wants to share 
     private byte shareRequest(String fileName, String sharedUser, int idSharer){
-        os.sendByte(codes.SHAREREQUEST); //send request to server to start share request functionality 
-        byte response = is.readByte();  //get response that server is now running the share request functionality 
+        out.sendByte(codes.SHAREREQUEST); //send request to server to start share request functionality 
+        byte response = in.readByte();  //get response that server is now running the share request functionality 
         
 
         if(response == codes.SHARERESPONSE) //valid response from server
         {
-            os.writeUTF(fileName); //send file name so we can check if it exists
-            byte doesFileExist = is.readByte();  //read from server to see if the file actually exists
+            out.writeUTF(fileName); //send file name so we can check if it exists
+            byte doesFileExist = in.readByte();  //read from server to see if the file actually exists
             //if file doesn't exist we should return as we can't share something not in the system duh
             if(doesFileExist == codes.NOSUCHFILE)
             {
                 return codes.NOSUCHFILE; 
             }
 
-            os.writeUTF(sharedUser);
-            byte doesUserExist = is.readByte(); 
+            out.writeUTF(sharedUser);
+            byte doesUserExist = in.readByte(); 
 
             //if the user to share with doesn't exist then we shouldn't share with them 
             if(doesUserExist == codes.NOSUCHUSER)
@@ -278,11 +294,11 @@ public class ClientLogic {
                 return codes.NOSUCHUSER; 
             }
 
-            os.writeInt(idSharer);
-            byte serverResponse = is.readByte(); 
+            out.writeInt(idSharer);
+            byte serverResponse = in.readByte(); 
 
-            //byte response = is.readByte(); 
-           // os.writeInt(idReceiver);  
+            //byte response = in.readByte(); 
+           // out.writeInt(idReceiver);  
 
             //validity checks already done.
             return serverResponse; 
@@ -290,18 +306,71 @@ public class ClientLogic {
             //maybe implement codes.SHARESUCCESS
         }
         // else {
-        //     return codes.ERR; //something happened
+        //     return codes.ERR; //something happened not sure if this can actually get hit though 
         // }
         
 
     }
     
-    private void unshareRequest(){
+    private void unshareRequest(String fileName, String sharedUser, int idSharer){
+        out.sendByte(codes.UNSHAREREQUEST); //send request to server to start share request functionality 
+        byte response = in.readByte();  //get response that server is now running the share request functionality 
+        
+
+        if(response == codes.UNSHARERESPONSE) //valid response from server
+        {
+            out.writeUTF(fileName); //send file name so we can check if it exists
+            byte doesFileExist = in.readByte();  //read from server to see if the file actually exists
+            //if file doesn't exist we should return as we can't share something not in the system duh
+            if(doesFileExist == codes.NOSUCHFILE)
+            {
+                return codes.NOSUCHFILE; 
+            }
+
+            out.writeUTF(sharedUser);
+            byte doesUserExist = in.readByte(); 
+
+            //if the user to share with doesn't exist then we shouldn't share with them 
+            if(doesUserExist == codes.NOSUCHUSER)
+            {
+                return codes.NOSUCHUSER; 
+            }
+
+            out.writeInt(idSharer);
+            byte serverResponse = in.readByte(); 
+
+            //byte response = in.readByte(); 
+           // out.writeInt(idReceiver);  
+
+            //validity checks already done.
+            return serverResponse; 
+            //return codes.OK
+        }
+        //else{ return codes.ERR;} not sure if this can get hit 
 
     }
 
-    private void deleteRequest(){
+    private byte deleteRequest(String filePath, int userID){
+        out.sendByte(codes.DELETEREQUEST); //send request to server
 
+        byte response = in.readByte(); //get servers response to request
+        if(response == codes.DELETERESPONSE) //server responded so we can start doing the important stuff
+        {
+            out.sendUTF(filePath); 
+
+            byte doesFileExist = in.readByte(); 
+
+            if(doesFileExist == codes.NOSUCHFILE)
+            {
+                return codes.NOSUCHFILE; 
+            }
+
+            //check if the user owns it with USEREXISTS
+
+            out.sendInt(userID); 
+
+            //byte doesUserExist = in
+        }
     }
 
     private void getAllFilesRequest()
@@ -311,14 +380,18 @@ public class ClientLogic {
 
 
 
-    public void setIO(ObjectOutputStream os, ObjectInputStream is) {
-        this.os = os;
-        this.is = is;
-    }
-    public void setMaster(String masterIP, int masterPort) {
-        this.masterIP = masterIP;
-        this.masterPort = masterPort;
-    }
+    // public void setIO(ObjectOutputStream os, ObjectInputStream is) {
+    //     this.out = os;
+    //     this.in = is;
+    // }
+    // public void setMaster(String masterIP, int masterPort) {
+    //     this.masterIP = masterIP;
+    //     this.masterPort = masterPort;
+    // }
+
+
+
+
     // method that is called when the user chooses to download a file
     // socket messages will be sent by helper methods defined below
     // gui should not allow user to download a file that they do not have access to
