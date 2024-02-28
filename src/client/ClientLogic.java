@@ -42,6 +42,13 @@ public class ClientLogic {
         this.port = port; 
         this.in = null; 
         this.out = null;
+        this.socket = null; 
+    }
+
+    public static void main(String[] args) throws IOException{
+        //ClientLogic client = new ClientLogic(); 
+        //client.start("localhost",1969); not sure how to go about this part 
+        this.start("localhost", 1969);
     }
 
     //get address, instantiate socket, instantiate input/output data streams
@@ -76,11 +83,6 @@ public class ClientLogic {
                         //get some sort of response from inputCodeHandler for output or write with class level out 
         }
 
-    }
-
-    public static void main(String[] args) throws IOException{
-        ClientLogic client = new ClientLogic(); 
-        client.start("localhost", 1969);
     }
 
     private static void inputCodeHandler(byte codeToHandle)
