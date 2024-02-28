@@ -1,10 +1,17 @@
 package client;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;     
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+
 import Utilities.Pair;
 import Utilities.codes;
 import Utilities.Message;
@@ -49,20 +56,21 @@ public class ClientLogic {
         in = new ObjectInputStream(this.socket.getInputStream());
 
 
-        //Handshake
-        out.writeUTF("SYN"); 
-        String synAck = in.readUTF();
-        if("SYN-ACK".equals(synAck))
+        //Loop while connecte
+        bool inputCodeBool = true; 
+        while(inputCodeBool)
         {
-            System.out.println("Handshake completed"); 
-                    //Loop while connecte
-                    while(true){
-                        //handle inputs
-                        byte inputCode = in.readByte(); 
-                        inputCodeHandler(inputCode);
+            //handle inputs
+            byte inputCode = in.readByte(); 
+            if(inputCode == codes.QUIT)
+            {
+                //quit
+            }
+            else
+            {
+                inputCodeHandler(inputCode);
+            }
                         //get some sort of response from inputCodeHandler for output or write with class level out 
-                    }
-
         }
 
     }
@@ -78,17 +86,35 @@ public class ClientLogic {
         {
             case codes.LOGINREQUEST:
             //code
-            loginRequest();
+            byte response = loginRequest();
+            //if (response == codes.LOGINSUCCESS){do something upon successful login}
+            //if (response == codes.LOGINFAILURE){do something upon unsuccessful login}
+            //if (response == codes.ERR){some sort of IO failure idk what to do here}
             break;
             case codes.REGISTERREQUEST:
             //code
-            registerRequest();
+            byte response = registerRequest();
+            //if (response == codes.REGISTERSUCCESS){do something upon successful registration}
+            //if (response == codes.REGISTERFAIL){do something upon unsuccessful registration}
+            //if (response == codes.ERR){some sort of IO failure idk what to do here}
             break;
             case codes.UPLOADREQUEST:
-            uploadRequest();
+            byte response = uploadRequest();
+            if (response == codes.ERR)
+            {
+                System.out.println("Error in uploading the file, ensure file exists");
+            }
             break;
             case codes.DOWNLOADREQUEST:
-            downloadRequest();
+            byte response = downloadRequest();
+            if(response == codes.ERR)
+            {
+                System.out.println("Error in downloading the file, either the connection dropped or you do not have enough storage to store locally");
+            }
+            if(response == codes.NOSUCHFILE)
+            {
+                //do something
+            }
             break;
             case codes.SHAREREQUEST:
             shareRequest();
@@ -106,68 +132,167 @@ public class ClientLogic {
         }
     }
 
-    //should get username/password from GUI (TODO: UNCOMMENT METHOD CALL)
-    //private int loginRequest(String username, String password)
-    private int loginRequest()
-    {
-        //hardcoded username/password for testing
-        String username = "test";
-        String password = "123";
-        byte[] data = new byte[1024]; 
-        int[] lengths = new int[2];
+    public static int loginRequest(String username, String password) {
+    	try {
+    		os.writeByte(codes.LOGINREQUEST);
+    		os.writeUTF(username);
+    		os.writeUTF(password);//should be hashed
+    		
+    		byte returned = is.readByte();
+    		if(returned == codes.LOGINFAIL) {
+    			String msg = is.readUTF();
+    			System.out.println(msg);
+                return codes.LOGINFAIL; 
+    		}
+    		return codes.LOGINSUCCESS; //should be ok since it made it here and thus we return OK 
+    	} catch(IOException e) {
+    		e.printStackTrace();
+            return codes.ERR;
+    	}
+    }
 
-        byte[] name = username.getBytes(StandardCharsets.UTF_8);
-        byte[] pass = password.getBytes(StandardCharsets.UTF_8);
-        lengths[0] = name.length; 
-        lengths[1] = pass.length; 
+    public static int registerRequest(String username, String password) {
+    	try {
+            os.writeByte(codes.REGISTERREQUEST);
+    		os.writeUTF(username);
+    		os.writeUTF(password);//should be hashed
+    		
+    		byte returned = is.readByte();
+    		if(returned == codes.REGISTERFAIL) {
+    			String msg = is.readUTF();
+    			System.out.println(msg);
+                return codes.REGISTERFAIL;
+    		}
+    		return codes.REGISTERSUCCESS;
+    	} catch(IOException e) {
+    		e.printStackTrace();
+            return codes.ERR;
+    	}
+    }
 
-        byte[] data = new byte[lengths[0] + lengths[1]]; 
+  
 
-        System.arraycopy(name, 0, data, 0, name.length);
-        System.arraycopy(pass, 0, data, name.length, pass.length); 
-
-        Message m = new Message(codes.LOGINREQUEST, data, lengths); 
-
-        
-
-
-
-        // join name/pass byte into data byte
-        //bytes[] data
-
-
-        //Object pair to hold username/password to pass over ObjectOutputStream to the runner
-        Pair<String,String> loginInfo = new Pair<username, password>;
-        out.writeObject(loginInfo);
-
-        //get response object from runner(server we are connected to)
-        Object response = input.readObject();
-        if(response != null && )
+    private byte uploadRequest(File file, String fileName){
+        os.writeByte(codes.UPLOADREQUEST); //send request to server
+        byte response = is.readByte();  //get response from server
+        try{
+        if(response == codes.UPLOADRESPONSE) //server responded with valid code so we can proceed 
         {
+            long fileSize = file.length(); 
+            os.writeLong(fileSize); //send fileSize to the runner so that they can determine storage/server to use and other stuffs
+            FileInputStream fileIS = new FileInputStream(file); //instantiate FileInputStream to get file contents to send over the socket input stream after
+            byte[] buffer = new byte[4096]; //buffer of 4kb
+            int bytesRead; 
+
+            while(bytesRead = (fileIS.read(buffer)) != -1)//while file still has contents to read we should read them 
+            {
+                os.write(buffer, 0, bytesRead);
+            }
+
+            fileIS.close();
+            System.out.println("File " + fileName + " has been uploaded.");
+            return codes.UPLOADSUCCESS; 
 
         }
+        else{
+            System.out.println("Something went wrong when trying to upload, try again");
+            return codes.UPLOADFAIL; 
+        }
 
-
-
-
-
-
+    }catch(IOException e)
+        e.printStackTrace();
     }
 
-    private void registerRequest()
-    {
+    private byte downloadRequest(String filename, int userID){
+        try{
+            os.writeByte(codes.DOWNLOADREQUEST);
+            byte response = in.readByte(); 
+            if(response == codes.DOWNLOADRESPONSE)
+            {
+                os.writeUTF(fileName);//send filename to server 
 
+
+                File file = new File(filename);
+                // file.getParentFile().mkdirs(); creates parent dir if it doesn't exist
+                file.createNewFile(); //ensures that it doesn't already exist
+                //
+
+                long fileSize = is.readLong(); 
+                
+                FileOutputStream fileOS = new FileOutputStream(file, false); //false so it doesn't append to the file if it exists (we could use this to resume downloads if one fails later potentially)
+
+                byte[] buffer = new byte[4096];
+                int bytesRead; 
+                long totalRead = 0; 
+
+                while(totalRead < fileSize)
+                {
+                    bytesRead = is.read(buffer, 0, buffer.length); 
+                    fileOS.write(buffer,0,bytesRead);
+                    totalRead += bytesRead;
+                }
+                fileOS.close();
+                System.out.println("File " + fileName + " has been downloaded.");
+                return codes.DOWNLOADSUCCESS;
+            }
+            else if(response == codes.NOSUCHFILE)
+            {
+                System.out.println("No such file exists, try again");
+                return codes.NOSUCHFILE; 
+            }
+            else
+            {
+                System.out.println("No response from the server");
+                return codes.DOWNLOADFAIL; 
+            }
+
+        }catch(IOException e)
+        {
+            //can happen if user is out of storage space and/or connection lost to server
+            e.printStackTrace();
+        }
     }
 
-    private void uploadRequest(){
+    //fileName is the name of the file which user wants to share 
+    private byte shareRequest(String fileName, String sharedUser, int idSharer){
+        os.sendByte(codes.SHAREREQUEST); //send request to server to start share request functionality 
+        byte response = is.readByte();  //get response that server is now running the share request functionality 
+        
 
-    }
+        if(response == codes.SHARERESPONSE) //valid response from server
+        {
+            os.writeUTF(fileName); //send file name so we can check if it exists
+            byte doesFileExist = is.readByte();  //read from server to see if the file actually exists
+            //if file doesn't exist we should return as we can't share something not in the system duh
+            if(doesFileExist == codes.NOSUCHFILE)
+            {
+                return codes.NOSUCHFILE; 
+            }
 
-    private void downloadRequest(){
+            os.writeUTF(sharedUser);
+            byte doesUserExist = is.readByte(); 
 
-    }
+            //if the user to share with doesn't exist then we shouldn't share with them 
+            if(doesUserExist == codes.NOSUCHUSER)
+            {
+                return codes.NOSUCHUSER; 
+            }
 
-    private void shareRequest(){
+            os.writeInt(idSharer);
+            byte serverResponse = is.readByte(); 
+
+            //byte response = is.readByte(); 
+           // os.writeInt(idReceiver);  
+
+            //validity checks already done.
+            return serverResponse; 
+            //return codes.OK
+            //maybe implement codes.SHARESUCCESS
+        }
+        // else {
+        //     return codes.ERR; //something happened
+        // }
+        
 
     }
     

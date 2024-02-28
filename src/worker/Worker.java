@@ -1,6 +1,6 @@
 package worker;
 import java.io.*;
-import WorkerJobs;
+import worker.WorkerJobs;
 
 // class that is responsible for storing files and processing requests from the master
 public class Worker{

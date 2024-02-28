@@ -24,5 +24,21 @@ public class codes {
     public static final byte OK = 53;
     public static final byte ERR = 54;
     public static final byte QUIT = 100;
+    public static final byte NOSUCHFILE = 101;
+    public static final byte NOSUCHUSER = 102; 
+    public static final byte USEREXISTS = 103; 
+    public static final byte LOGINSUCCESS = 104;
+    public static final byte LOGINFAIL = 105;  
+    public static final byte REGISTERSUCCESS = 106; 
+    public static final byte REGISTERFAIL = 107; 
+    public static final byte UPLOADSUCCESS = 108; 
+    public static final byte UPLOADFAIL = 109; 
+    public static final byte DOWNLOADSUCCESS = 110; 
+    public static final byte DOWNLOADFAIL = 111; 
+    public static final byte FILEEXISTS = 112; 
+    public static final byte SHARESUCCESS = 113; 
+    public static final byte SHAREFAIL = 114; 
+    public static final byte UNSHARESUCCESS = 115; 
+    public static final byte UNSUAREFAIL = 116; 
     
 }
