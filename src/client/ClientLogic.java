@@ -235,7 +235,8 @@ public class ClientLogic {
             byte response = in.readByte();  //get response from server
         	if(response == codes.UPLOADRESPONSE) //server responded with valid code so we can proceed 
         	{
-	            long fileSize = file.length(); 
+                out.writeUTF(fileName); //write filename to server 
+	            long fileSize = file.length(); //get file size so we can write it to the server 
 	            out.writeLong(fileSize); //send fileSize to the runner so that they can determine storage/server to use and other stuffs
 	            FileInputStream fileIS = new FileInputStream(file); //instantiate FileInputStream to get file contents to send over the socket input stream after
 	            byte[] buffer = new byte[4096]; //buffer of 4kb
@@ -247,7 +248,12 @@ public class ClientLogic {
 	            }
 	            fileIS.close();
 	            System.out.println("File " + fileName + " has been uploaded.");
+                byte result = in.readByte();
+                if(result == codes.UPLOADSUCCESS){
 	            return codes.UPLOADSUCCESS; 
+                }else {
+                    return codes.UPLOADFAIL; 
+                }
         	}
         	else{
         		System.out.println("Something went wrong when trying to upload, try again");
@@ -288,8 +294,16 @@ public class ClientLogic {
                     totalRead += bytesRead;
                 }
                 fileOS.close();
-                System.out.println("File " + filename + " has been downloaded.");
-                return codes.DOWNLOADSUCCESS;
+                byte result = in.readByte();
+                if(result == codes.DOWNLOADSUCCESS)
+                {
+                    System.out.println("File " + filename + " has been downloaded.");
+                    return codes.DOWNLOADSUCCESS;
+                }
+                else
+                {
+                    return codes.DOWNLOADFAIL; 
+                }
             }
             else if(response == codes.NOSUCHFILE)
             {

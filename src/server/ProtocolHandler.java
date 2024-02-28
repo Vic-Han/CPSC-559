@@ -30,19 +30,28 @@ public class ProtocolHandler {
     
     public void workerHandleUploadRequest() {
         try {
+            os.writeByte(codes.UPLOADRESPONSE); //so client knows it can start passing other important information 
             String fileName = is.readUTF();
             long fileSize = is.readLong();
-            FileOutputStream fos = new FileOutputStream("content/"+fileName);
-            byte[] buf = new byte[2048];
-            int read = 0;
+            //create new file incase the file already exists (MAYBE WE SHOULD DO A DATABASE CHECK HERE IDK)
+            File file = new File("content/"+fileName); 
+            file.createNewFile(); //ensures file isn't already there? or just will create a new version idk the exact working of this 
+            FileOutputStream fos = new FileOutputStream(file, false); //false to not append if the file already exists within the system
+
+            byte[] buf = new byte[4096]; //4kb buffer
+            int read;
             long totalRead = 0;
-            while ((read = is.read(buf, 0, Math.min(buf.length, (int) (fileSize - totalRead)))) > 0) {
-                totalRead += read;
+            while (totalRead < fileSize){//read = is.read(buf, 0, Math.min(buf.length, (int) (fileSize - totalRead)))) > 0) {
+                read = is.read(buf, 0, buf.length); //read 
+
+                //totalRead += read;
                 fos.write(buf, 0, read);
+                totalRead += read; 
                 // Send ACK for each packet
                 //os.writeUTF("ACK");
             }
             fos.close();
+            os.writeByte(codes.UPLOADSUCCESS);
         } catch(IOException e) {
             e.printStackTrace();
         }
@@ -65,14 +74,14 @@ public class ProtocolHandler {
             try{
             File file = new File("content/"+fileName);
             FileInputStream fis = new FileInputStream(file);
-            os.writeLong(file.length());
-            byte[] buf = new byte[2048];
+            os.writeLong(file.length()); //give file length to the client requesting so they know how long to download for 
+            byte[] buf = new byte[4096]; //4kb buffer
             int read;
-            while ((read = fis.read(buf)) > 0) {
+            while ((read = fis.read(buf)) != -1) {
                 os.write(buf, 0, read);
             }
             fis.close();
-            //os.writeByte(codes.DOWNLOADSUCCESS); 
+            os.writeByte(codes.DOWNLOADSUCCESS); 
             }catch(NoSuchFileException f)
             {
                 os.writeByte(codes.NOSUCHFILE);
