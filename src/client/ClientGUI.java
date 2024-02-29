@@ -1,25 +1,15 @@
 package client;
 
-import java.awt.Button;
-import java.awt.Image;
-import java.awt.Insets;
-import java.awt.Label;
-import java.awt.TextField;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
+import javafx.application.Application; import javafx.scene.Scene; import javafx.scene.control.Button;
+import javafx.scene.control.Label; import javafx.scene.image.Image; import javafx.geometry.Insets;
+import javafx.scene.layout.BorderPane; import javafx.scene.layout.VBox; import javafx.stage.DirectoryChooser;
+import javafx.scene.control.TextField; import javafx.scene.control.PasswordField; import javafx.stage.Stage;
+import javafx.stage.FileChooser; import javafx.scene.layout.HBox; import javafx.scene.control.TextInputDialog;
+import java.io.IOException; import java.io.File; import java.nio.file.Files;
+import javafx.stage.FileChooser; 
 import java.util.Optional;
 
-import javafx.application.Application;
-import javafx.scene.Scene;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextInputDialog;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
+import Utilities.codes;
 
 // run/compile within gui directory using
 // java --module-path "C:\Program Files\Java\javafx-sdk-21.0.2\lib" --add-modules javafx.controls GUI
@@ -28,7 +18,9 @@ import javafx.stage.Stage;
 public class ClientGUI extends Application {
 
     private Stage primaryStage;
+    private static ClientLogic clientLogic;
     public static void main(String[] args) {
+        clientLogic = new ClientLogic("localhost",1969);
         launch(args);
     }
 
@@ -120,14 +112,19 @@ public class ClientGUI extends Application {
     }
 
     private void handleLogin(String username, String password) {
-        System.out.println("Username: " + username);
-        System.out.println("Password: " + password);
+        System.out.println("Username: " + username + "\tPassword: " + password);
+        int req = clientLogic.loginRequest(username, password);
         
-        // temporary login logic
-        if ("Matteo".equals(username) && "IsAwesome".equals(password)) showMainPage(username);
-        else {
-            System.out.println("Login failed. Invalid credentials.");
-            // Add code for handling failed login
+        switch(req){
+            case codes.LOGINSUCCESS:
+                System.out.println("Successful login");
+                showMainPage(username);
+                break;
+            case codes.LOGINFAIL:
+                System.out.println("Intruder Alert");
+                break;
+            default: // error
+                System.out.println("Something broke");
         }
     }
 
@@ -135,7 +132,19 @@ public class ClientGUI extends Application {
         System.out.println("New Username: " + username);
         System.out.println("New Password: " + password);
         
-        // add user to DB
+        int req = clientLogic.loginRequest(username, password);
+        
+        switch(req){
+            case codes.LOGINSUCCESS:
+                System.out.println("Successful Registration");
+                showMainPage(username);
+                break;
+            case codes.LOGINFAIL:
+                System.out.println("Failed Reg LOL");
+                break;
+            default: // error
+                System.out.println("Something broke (reg)");
+        }
     }
 
     private void uploadFile(Stage primaryStage) {

@@ -96,9 +96,9 @@ public class ProtocolHandler {
             String username = is.readUTF();
             String password = is.readUTF();
             //System.out.println("Username: " + username + " Password: " + password);
-            //if password matches for username
+            int loginReq = MasterDatabase.loginUser(username, password);
             //gui should return the clientID so we can store it in the instance of the client to help with share requests and such later (prevents an extra DB lookup)
-            if(true) {
+            if(loginReq>=0) {
                 os.writeByte(codes.LOGINSUCCESS);
             } else {
                 os.writeByte(codes.LOGINFAIL);
@@ -118,6 +118,7 @@ public class ProtocolHandler {
             String username = is.readUTF();
             String password = is.readUTF();
 
+            
             //if username already taken or password blank should return error code 
             //if (username already in database){
             //os.writeByte(codes.USEREXISTS); return}
@@ -128,16 +129,16 @@ public class ProtocolHandler {
                 return; 
             }
 
-            //successful registration 
-            os.writeByte(codes.REGISTERSUCCESS);
+            int registerReq = MasterDatabase.registerUser(username, password);
 
-            //Register user and return status
-            // if(true) {
-            //     os.writeByte(codes.OK);
-            // } else {
-            //     os.writeByte(codes.REGISTERFAIL);
-            //     os.writeUTF("Error message");
-            // }
+            //successful registration
+            if(registerReq >= 0) {
+                os.writeByte(codes.REGISTERSUCCESS);
+            } else {
+                os.writeByte(codes.REGISTERFAIL);
+                os.writeUTF("Error message");
+            }
+
         } catch(IOException e) {
             e.printStackTrace();
         }
