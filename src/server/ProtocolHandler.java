@@ -47,6 +47,7 @@ public class ProtocolHandler {
                 totalRead += read; 
             }
             fos.close();
+            //MasterDatabase.addFile(fileName, read);
             os.writeByte(codes.UPLOADSUCCESS);
         } catch(IOException e) {
             e.printStackTrace();
@@ -100,6 +101,7 @@ public class ProtocolHandler {
             //gui should return the clientID so we can store it in the instance of the client to help with share requests and such later (prevents an extra DB lookup)
             if(loginReq>=0) {
                 os.writeByte(codes.LOGINSUCCESS);
+                os.writeByte(loginReq);
             } else {
                 os.writeByte(codes.LOGINFAIL);
                 os.writeUTF("Error message");
@@ -134,6 +136,7 @@ public class ProtocolHandler {
             //successful registration
             if(registerReq >= 0) {
                 os.writeByte(codes.REGISTERSUCCESS);
+                os.writeByte(registerReq);
             } else {
                 os.writeByte(codes.REGISTERFAIL);
                 os.writeUTF("Error message");
