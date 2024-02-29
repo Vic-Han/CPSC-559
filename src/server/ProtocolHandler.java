@@ -101,11 +101,12 @@ public class ProtocolHandler {
             //gui should return the clientID so we can store it in the instance of the client to help with share requests and such later (prevents an extra DB lookup)
             if(loginReq>=0) {
                 os.writeByte(codes.LOGINSUCCESS);
-                os.writeByte(loginReq);
             } else {
                 os.writeByte(codes.LOGINFAIL);
                 os.writeUTF("Error message");
             }
+            os.writeByte(loginReq);
+
         } catch(IOException e) {
             e.printStackTrace();
         }
