@@ -132,14 +132,14 @@ public class ClientGUI extends Application {
         System.out.println("New Username: " + username);
         System.out.println("New Password: " + password);
         
-        int req = clientLogic.loginRequest(username, password);
+        int req = clientLogic.registerRequest(username, password);
         
         switch(req){
-            case codes.LOGINSUCCESS:
+            case codes.REGISTERSUCCESS:
                 System.out.println("Successful Registration");
                 showMainPage(username);
                 break;
-            case codes.LOGINFAIL:
+            case codes.REGISTERFAIL:
                 System.out.println("Failed Reg LOL");
                 break;
             default: // error
