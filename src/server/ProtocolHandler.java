@@ -137,11 +137,12 @@ public class ProtocolHandler {
             //successful registration
             if(registerReq >= 0) {
                 os.writeByte(codes.REGISTERSUCCESS);
-                os.writeByte(registerReq);
             } else {
                 os.writeByte(codes.REGISTERFAIL);
                 os.writeUTF("Error message");
             }
+            os.writeByte(registerReq);
+
 
         } catch(IOException e) {
             e.printStackTrace();
