@@ -26,7 +26,6 @@ public class Runner extends Thread {
     DataOutputStream os = null;
     //ProtocolHandler handler = new ProtocolHandler(os, is);
 
-   System.out.println("Runner started");
     // Get these I/O streams
     try {
       is = new DataInputStream(this.s.getInputStream());
@@ -35,9 +34,13 @@ public class Runner extends Thread {
       ProtocolHandler protocolHandler = new ProtocolHandler(os, is);
       System.out.println("streams open");
       while(true) {
+    	System.out.println("Waiting for request");
         byte code = is.readByte();
         System.out.println("Code: " + code);
-        if(code == codes.QUIT) break;
+        if(code == codes.QUIT) {
+        	System.out.println("Quitting");
+        	break;
+        }
         switch(code) {
           case(codes.UPLOADREQUEST):
             protocolHandler.workerHandleUploadRequest();
@@ -60,11 +63,13 @@ public class Runner extends Thread {
           case(codes.DELETEREQUEST):
             protocolHandler.handleDeleteRequest();
           	break;
+          case(codes.GETALLFILESREQUEST):
+        	  protocolHandler.handleAllFilesRequest();
+        	  break;
           default:
         	System.out.println("Unknown command given");
         	break;
         }
-        break;
       }
       
       this.s.close();

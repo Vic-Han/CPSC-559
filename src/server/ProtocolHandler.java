@@ -9,12 +9,12 @@ import java.io.FileOutputStream;
 import java.io.FileInputStream;
 
 import Utilities.*;
-import server.MasterParser;
+
 // instance based as it may be used by multiple threads
 public class ProtocolHandler {
     DataInputStream is;
     DataOutputStream os;
-
+    private final String PREPEND = "C:\\CPSC559Proj\\SERVERFILES\\";
 
     public ProtocolHandler(DataOutputStream os, DataInputStream is) {
         this.os = os;
@@ -34,7 +34,7 @@ public class ProtocolHandler {
             String fileName = is.readUTF();
             long fileSize = is.readLong();
             //create new file incase the file already exists (MAYBE WE SHOULD DO A DATABASE CHECK HERE IDK)
-            File file = new File("content/"+fileName); 
+            File file = new File(PREPEND+fileName); 
             file.createNewFile(); //ensures file isn't already there? or just will create a new version idk the exact working of this 
             FileOutputStream fos = new FileOutputStream(file, false); //false to not append if the file already exists within the system
 
@@ -43,12 +43,8 @@ public class ProtocolHandler {
             long totalRead = 0;
             while (totalRead < fileSize){//read = is.read(buf, 0, Math.min(buf.length, (int) (fileSize - totalRead)))) > 0) {
                 read = is.read(buf, 0, buf.length); //read 
-
-                //totalRead += read;
                 fos.write(buf, 0, read);
                 totalRead += read; 
-                // Send ACK for each packet
-                //os.writeUTF("ACK");
             }
             fos.close();
             os.writeByte(codes.UPLOADSUCCESS);
@@ -72,13 +68,14 @@ public class ProtocolHandler {
             os.writeByte(codes.DOWNLOADRESPONSE);//send response to client so the client can proceed
             String fileName = is.readUTF();
             try{
-            File file = new File("content/"+fileName);
+            File file = new File(PREPEND+fileName);
             FileInputStream fis = new FileInputStream(file);
             os.writeLong(file.length()); //give file length to the client requesting so they know how long to download for 
             byte[] buf = new byte[4096]; //4kb buffer
             int read;
             while ((read = fis.read(buf)) != -1) {
                 os.write(buf, 0, read);
+                os.flush();
             }
             fis.close();
             os.writeByte(codes.DOWNLOADSUCCESS); 
@@ -98,7 +95,7 @@ public class ProtocolHandler {
         try{
             String username = is.readUTF();
             String password = is.readUTF();
-            System.out.println("Username: " + username + " Password: " + password);
+            //System.out.println("Username: " + username + " Password: " + password);
             //if password matches for username
             //gui should return the clientID so we can store it in the instance of the client to help with share requests and such later (prevents an extra DB lookup)
             if(true) {
@@ -120,7 +117,6 @@ public class ProtocolHandler {
             os.writeByte(codes.REGISTERRESPONSE);
             String username = is.readUTF();
             String password = is.readUTF();
-            System.out.println("Username: " + username + " Password: " + password);
 
             //if username already taken or password blank should return error code 
             //if (username already in database){
@@ -267,7 +263,7 @@ public class ProtocolHandler {
 
     public void handleAllFilesRequest(){
         try{
-        os.writeByte(codes.GETALLFILESREQUEST);
+        os.writeByte(codes.GETALLFILESRESPONSE);
 
         int userID = is.readInt(); 
 
@@ -289,7 +285,7 @@ public class ProtocolHandler {
     // should return a success or failure message to the client
     public void handleDeleteRequest() {
         try {
-            os.writeByte(codes.DELETEREQUEST); 
+            os.writeByte(codes.DELETERESPONSE); 
 
             String filename = is.readUTF();
 
@@ -302,10 +298,7 @@ public class ProtocolHandler {
             //}
             //else file must exist
             os.writeByte(codes.FILEEXISTS); //file must exist so write OK
-            
-
-
-            //
+          
             int userID = is.readInt();
 
 

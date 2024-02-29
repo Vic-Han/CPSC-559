@@ -13,6 +13,7 @@ public class Master {
         try (ServerSocket ss = new ServerSocket(port)) {
             // daemon like thing
             while (true) {
+            	System.out.println("Waiting for new connection");
                 s = ss.accept(); // accept a new client connection
                 new Runner(s).start(); // spwan a runner thread to serve the client
             }

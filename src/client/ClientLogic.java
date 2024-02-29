@@ -6,17 +6,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Map;     
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 
-import Utilities.Pair;
 import Utilities.codes;
-import Utilities.Message;
+
 
 
 
@@ -59,120 +53,20 @@ public class ClientLogic {
         	this.in = null;
         }
     }
-
-    /*//get address, instantiate socket, instantiate input/output data streams
-    public void start()
-    {
-    	try {
-	        //Host string into useable IP address
-	        InetAddress address = InetAddress.getByName(host);
-	
-	        //Instantiate socket with given IP address and port number
-	        this.socket = new Socket(address, port);
-	
-	        //instantiate output/input streams
-	        out = new DataOutputStream(this.socket.getOutputStream());
-	        in = new DataInputStream(this.socket.getInputStream());
-	
-	        /*
-	        //Loop while connecte
-	        boolean inputCodeBool = true; 
-	        while(inputCodeBool)
-	        {
-	            //handle inputs
-	            byte inputCode = in.readByte(); 
-	            if(inputCode == codes.QUIT)
-	            {
-	                //quit
-	                break;
-	            }
-	            else
-	            {
-	                inputCodeHandler(inputCode);
-	            }
-	                        //get some sort of response from inputCodeHandler for output or write with class level out 
-	        }
-    	} catch(IOException e) {
-    		e.printStackTrace();
-    	}
-
+    
+    public boolean isConnected() {
+    	return this.socket == null;
     }
-
-    private static void inputCodeHandler(byte codeToHandle)
-    {
-        switch(codeToHandle)
-        {
-            case codes.LOGINREQUEST:
-            //code
-            byte response = loginRequest();
-            //if (response == codes.LOGINSUCCESS){do something upon successful login}
-            //if (response == codes.LOGINFAILURE){do something upon unsuccessful login}
-            //if (response == codes.ERR){some sort of IO failure idk what to do here}
-            break;
-            case codes.REGISTERREQUEST:
-            //code
-            byte response = registerRequest();
-            //if (response == codes.REGISTERSUCCESS){do something upon successful registration}
-            //if (response == codes.REGISTERFAIL){do something upon unsuccessful registration}
-            //if (response == codes.ERR){some sort of IO failure idk what to do here}
-            break;
-            case codes.UPLOADREQUEST:
-            byte response = uploadRequest();
-            if (response == codes.ERR)
-            {
-                System.out.println("Error in uploading the file, ensure file exists");
-            }
-            break;
-            case codes.DOWNLOADREQUEST:
-            byte response = downloadRequest();
-            if(response == codes.ERR)
-            {
-                System.out.println("Error in downloading the file, either the connection dropped or you do not have enough storage to store locally");
-            }
-            // if(response == codes.NOSUCHFILE)
-            // {
-            //     //do something
-            // }
-            // if(response == codes.NOSUCHUSER)
-            // {
-            //     //do something
-            // }
-            break;
-            case codes.SHAREREQUEST:
-            byte response = shareRequest();
-
-            break;
-            case codes.UNSHAREREQUEST:
-            byte response = unshareRequest();
-            // if(response == codes.NOSUCHFILE)
-            // {
-            //     //do something
-            // }
-            // if(response == codes.NOSUCHUSER)
-            // {
-            //     //do something
-            // }
-            break;
-            case codes.DELETEREQUEST:
-            byte response = deleteRequest();
-            break;
-            case codes.GETALLFILESREQUEST:
-            byte response = getAllFilesRequest();
-            break;
-            default:
-            break;
-        }
-        break;
-    }
-	*/
     
     public void stop() {
     	try {
-    		if(!socket.isClosed()) socket.close();
+    		out.writeByte(codes.QUIT);
+    		socket.close();
     	} catch(IOException e) {
     		e.printStackTrace();
     	}
     }
+    
     public int loginRequest(String username, String password) {
     	try {
     		out.writeByte(codes.LOGINREQUEST);
@@ -202,17 +96,14 @@ public class ClientLogic {
                 //byte user = in.readByte(); 
                 //if (user == codes.USEREXISTS) then the user already exists and thus we cant create new user with same name 
                 out.writeUTF(password);//should be hashed
-                byte validPass = in.readByte(); 
-                if(validPass == codes.PASSWORDINVALID)
+                byte returned = in.readByte(); 
+                if(returned == codes.PASSWORDINVALID)
                 {
                     return codes.PASSWORDINVALID; 
                 }
-
-
-                byte returned = in.readByte();
                 if(returned == codes.REGISTERFAIL) {
-                    String msg = in.readUTF();
-                    System.out.println(msg);
+                    //String msg = in.readUTF(); unreachable, but doesnt happen yet - just in case
+                    //System.out.println(msg);
                     return codes.REGISTERFAIL;
                 }
                 return codes.REGISTERSUCCESS;
@@ -227,9 +118,7 @@ public class ClientLogic {
     	}
     }
 
-  
-
-    private byte uploadRequest(File file, String fileName){
+    public byte uploadRequest(File file, String fileName){
         try{
         	out.writeByte(codes.UPLOADREQUEST); //send request to server
             byte response = in.readByte();  //get response from server
@@ -245,6 +134,7 @@ public class ClientLogic {
 	            while((bytesRead = (fileIS.read(buffer))) != -1)//while file still has contents to read we should read them 
 	            {
 	                out.write(buffer, 0, bytesRead);
+	                out.flush();
 	            }
 	            fileIS.close();
 	            System.out.println("File " + fileName + " has been uploaded.");
@@ -265,20 +155,18 @@ public class ClientLogic {
         }
     }
 
-    private byte downloadRequest(String filename, int userID){
+    public byte downloadRequest(String filename, int userID){
         try{
+        	
             out.writeByte(codes.DOWNLOADREQUEST);
             byte response = in.readByte(); 
             if(response == codes.DOWNLOADRESPONSE)
             {
                 out.writeUTF(filename);//send filename to server 
-
-
-                File file = new File(filename);
+                String PREPEND = "C:\\CPSC559Proj\\CLIENTFILES\\"; //TODO: solidify this?
+                File file = new File(PREPEND+filename);
                 // file.getParentFile().mkdirs(); creates parent dir if it doesn't exist
                 file.createNewFile(); //ensures that it doesn't already exist
-                //
-
                 long fileSize = in.readLong(); 
                 
                 FileOutputStream fileOS = new FileOutputStream(file, false); //false so it doesn't append to the file if it exists (we could use this to resume downloads if one fails later potentially)
@@ -325,7 +213,7 @@ public class ClientLogic {
     }
 
     //fileName is the name of the file which user wants to share 
-    private byte shareRequest(String fileName, String sharedUser, int idSharer){
+    public byte shareRequest(String fileName, String sharedUser, int idSharer){
     	try {
 	        out.writeByte(codes.SHAREREQUEST); //send request to server to start share request functionality 
 	        byte response = in.readByte();  //get response that server is now running the share request functionality 
@@ -370,7 +258,7 @@ public class ClientLogic {
 
     }
     
-    private byte unshareRequest(String fileName, String sharedUser, int idSharer){
+    public byte unshareRequest(String fileName, String sharedUser, int idSharer){
     	try {
 	        out.writeByte(codes.UNSHAREREQUEST); //send request to server to start share request functionality 
 	        byte response = in.readByte();  //get response that server is now running the share request functionality 
@@ -412,7 +300,7 @@ public class ClientLogic {
     	}
     }
 
-    private byte deleteRequest(String filePath, int userID){
+    public byte deleteRequest(String filePath, int userID){
     	try {
 	        out.writeByte(codes.DELETEREQUEST); //send request to server
 	
@@ -447,7 +335,7 @@ public class ClientLogic {
     	}
     }
 
-    private byte getAllFilesRequest(int userID)
+    public byte getAllFilesRequest(int userID)
     {
     	try {
 	        out.writeByte(codes.GETALLFILESREQUEST); 
@@ -481,124 +369,4 @@ public class ClientLogic {
     		return codes.ERR;
     	}
     }
-
-
-
-    // public void setIO(ObjectOutputStream os, ObjectInputStream is) {
-    //     this.out = os;
-    //     this.in = is;
-    // }
-    // public void setMaster(String masterIP, int masterPort) {
-    //     this.masterIP = masterIP;
-    //     this.masterPort = masterPort;
-    // }
-
-
-
-
-    // method that is called when the user chooses to download a file
-    // socket messages will be sent by helper methods defined below
-    // gui should not allow user to download a file that they do not have access to
-    // public static void fileUpload(String filePath, int userID) {
-    //     //send to load balancer request for server
-    // 	//receive response from server
-    // 	//create new socket from response message
-    // 	//
-    // 	/*
-	// 	 	int read;
-	//         while ((read = fis.read(buf)) > 0) {
-	//             out.write(buf, 0, read);
-	//             // Wait for ACK
-	//             String ack = in.readUTF();
-	//             if (!"ACK".equals(ack)) {
-	//                 System.out.println("Error in transmission, stopping.");
-	//                 break;
-	//             }
-	//         }
-	// 	 */
-    // }
-    // // method that is called when the user chooses to download a file
-    // // socket messages will be sent by helper methods defined below
-    // // gui should not allow user to download a file that they do not have access to
-    // public static void fileDownload(String filePath, int userID) {
-        
-    // }
-    // // socket messages should be sent and recived here
-    // // method that is called when user tries to login
-    // // returns userID
-    // public static int loginRequest(){//String username, String password) {
-    //     //hardcoded username/pass for testing
-
-    //     return 0; 
-    // }
-
-    // //private byte 
-  
-    // // method that is called when user tries to register
-    // // socket messages should be sent and recived here
-    // // returns userID
-    // public static int registerRequest(String username, String password) {
-
-    //     return -1;
-    // }
-    // // method that is called when user tries to delete a file
-    // // socket messages should be sent and recived here
-    // public static void deleteRequest(String filePath, int userID) {
-
-    // }
-    // // method that is called when user tries to share a file
-    // // socket messages should be sent and recived here
-    // public static void shareRequest(String fileName, String sharedUser, int userID) {
-
-    // }
-    // // method that is called when user tries to unshare a file
-    // // socket messages should be sent and recived here
-    // public static void unshareRequest(String fileName, String sharedUser, int userID) {
-
-    // }
-    // // method that is called when user wants to see all files they can download
-    // // returns a list of pairs; first entry is the file name, second entry is the owner/permission(owner/shared w me)
-    // public static ArrayList<Pair<String, Integer>> getAllFiles(int userID) {
-
-    //     return null;
-    // }
-
-    // // Todo: implement some type of authentication token to talk to workers
-
-    // // asks the load balancer/master for a worker that can accept the upload
-    // // returns the worker IP and port number
-    // // socket messages should be sent and recived here
-    // private static Pair<String, Integer> sendUploadRequest(String fileName){
-    //     //changed int to Integer as java must use a wrapper (Integer) for generic types rather than primitive (int)
-    //         //src: https://stackoverflow.com/questions/34885463/insert-dimensions-to-complete-expression-referencetype
-    //     return null;
-    // }
-
-    // // method that uploads file to worker
-    // // socket messages should be sent and recived here    
-    // private static void uploadFiletoWorker(String fileName, String workerIP, int portNo){
-
-    // }
-
-    // // method that tells the load balancer/master that the file has been uploaded successfully
-    // // implement for future demo when we cannot assume process is successful
-    // private static void sendSuccessUploadMessage(String fileName, int userID){
-
-    // }
-
-    // //  asks the load balancer/master for a worker that has the file
-    // // returns the worker IP and port number
-    // // socket messages should be sent and recived here
-    // private static Pair<String, Integer> sendDownloadRequest(String fileName){
-
-    //     return null;
-    // }
-    // // method that downloads file from worker
-    // // puts the file in local(client) file system and the user can download it from there
-    // // may need to change UX mentioned above
-    // // socket messages should be sent and recived here
-    // private static void downloadFileFromWorker(String fileName, String workerIP, int portNo){
-
-    // }
-
 }
