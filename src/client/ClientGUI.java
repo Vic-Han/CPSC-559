@@ -154,9 +154,18 @@ public class ClientGUI extends Application {
 
         if (selectedFile != null) {
             try {
-                // file upload logic here
-                // temporarily just pretend to upload
-                System.out.println("File uploaded: " + selectedFile.getName());
+                byte req = clientLogic.uploadRequest(selectedFile);
+                
+                switch(req){
+                    case codes.UPLOADSUCCESS:
+                        System.out.println("Successful upload of " + selectedFile.getName());
+                        break;
+                    case codes.UPLOADFAIL:
+                        System.out.println("Failed upload :(");
+                        break;
+                    default: // error
+                        System.out.println("Something broke (upload)");
+                }
             } catch (Exception e) {
                 System.out.println("FAILED to uploaded: " + selectedFile.getName());
             }

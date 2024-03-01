@@ -20,6 +20,7 @@ public class ClientLogic {
 
     DataInputStream in;
     DataOutputStream out;
+		byte id;
     //private  String host;
     //private  int port;	neither used? commented out for now
     Socket socket; 
@@ -74,6 +75,7 @@ public class ClientLogic {
     		out.writeUTF(password);//should be hashed
     		
     		byte returned = in.readByte();
+				id = in.readByte();
     		if(returned == codes.LOGINFAIL) {
     			String msg = in.readUTF();
     			System.out.println(msg);
@@ -97,6 +99,7 @@ public class ClientLogic {
                 //if (user == codes.USEREXISTS) then the user already exists and thus we cant create new user with same name 
                 out.writeUTF(password);//should be hashed
                 byte returned = in.readByte(); 
+								id = in.readByte();
                 if(returned == codes.PASSWORDINVALID)
                 {
                     return codes.PASSWORDINVALID; 
@@ -118,16 +121,17 @@ public class ClientLogic {
     	}
     }
 
-    public byte uploadRequest(File file, String fileName){
+    public byte uploadRequest(File file){
         try{
         	out.writeByte(codes.UPLOADREQUEST); //send request to server
             byte response = in.readByte();  //get response from server
         	if(response == codes.UPLOADRESPONSE) //server responded with valid code so we can proceed 
         	{
-                out.writeUTF(fileName); //write filename to server 
+                out.writeUTF(file.getName()); //write filename to server 
 	            long fileSize = file.length(); //get file size so we can write it to the server 
 	            out.writeLong(fileSize); //send fileSize to the runner so that they can determine storage/server to use and other stuffs
-	            FileInputStream fileIS = new FileInputStream(file); //instantiate FileInputStream to get file contents to send over the socket input stream after
+	            out.writeByte(id);
+							FileInputStream fileIS = new FileInputStream(file); //instantiate FileInputStream to get file contents to send over the socket input stream after
 	            byte[] buffer = new byte[4096]; //buffer of 4kb
 	            int bytesRead; 
 	
@@ -137,7 +141,7 @@ public class ClientLogic {
 	                out.flush();
 	            }
 	            fileIS.close();
-	            System.out.println("File " + fileName + " has been uploaded.");
+	            System.out.println("File " + file.getName() + " has been uploaded.");
                 byte result = in.readByte();
                 if(result == codes.UPLOADSUCCESS){
 	            return codes.UPLOADSUCCESS; 
