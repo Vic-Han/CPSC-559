@@ -33,6 +33,7 @@ public class ProtocolHandler {
             os.writeByte(codes.UPLOADRESPONSE); //so client knows it can start passing other important information 
             String fileName = is.readUTF();
             long fileSize = is.readLong();
+            int userID = is.readByte();
             //create new file incase the file already exists (MAYBE WE SHOULD DO A DATABASE CHECK HERE IDK)
             File file = new File(PREPEND+fileName); 
             file.createNewFile(); //ensures file isn't already there? or just will create a new version idk the exact working of this 
@@ -47,7 +48,7 @@ public class ProtocolHandler {
                 totalRead += read; 
             }
             fos.close();
-            //MasterDatabase.addFile(fileName, read);
+            MasterDatabase.addFile(fileName, userID);
             os.writeByte(codes.UPLOADSUCCESS);
         } catch(IOException e) {
             e.printStackTrace();
