@@ -2,6 +2,7 @@ package server;
 
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
+import java.util.ArrayList;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -275,6 +276,17 @@ public class ProtocolHandler {
         int userID = is.readInt(); 
 
         //check if userID is actually in system 
+        ArrayList<String> owned = MasterDatabase.getAllOwnedFiles(userID);
+        ArrayList<String> shared = MasterDatabase.getAllSharedFiles(userID);
+        ArrayList<Pair<String,String>> allFiles = new ArrayList<Pair<String,String>>();
+        for(String s : owned) {
+        	allFiles.add(new Pair(s,"own"));
+        }
+        for(String s : shared) {
+        	allFiles.add(new Pair(s,"share"));
+        }
+        //TODO: Send list allFiles over socket connection
+        
         //if(valid user id from caller (client)){
             os.writeByte(codes.USEREXISTS); 
             os.writeByte(codes.GETALLSUCCESS); //if successful 
