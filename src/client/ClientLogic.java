@@ -73,14 +73,18 @@ public class ClientLogic {
     		out.writeByte(codes.LOGINREQUEST);
     		out.writeUTF(username);
     		out.writeUTF(password);//should be hashed
+    		System.out.println("Sent Request");
     		
     		byte returned = in.readByte();
-				id = in.readByte();
+    		System.out.println("Recieved Response: " + returned);
     		if(returned == codes.LOGINFAIL) {
     			String msg = in.readUTF();
     			System.out.println(msg);
                 return codes.LOGINFAIL; 
     		}
+    		
+			id = in.readByte(); //If success then ID was also written
+			System.out.println("Read ID: " + id);
     		return codes.LOGINSUCCESS; //should be ok since it made it here and thus we return OK 
     	} catch(IOException e) {
     		e.printStackTrace();
@@ -99,7 +103,6 @@ public class ClientLogic {
                 //if (user == codes.USEREXISTS) then the user already exists and thus we cant create new user with same name 
                 out.writeUTF(password);//should be hashed
                 byte returned = in.readByte(); 
-								id = in.readByte();
                 if(returned == codes.PASSWORDINVALID)
                 {
                     return codes.PASSWORDINVALID; 
@@ -109,6 +112,7 @@ public class ClientLogic {
                     //System.out.println(msg);
                     return codes.REGISTERFAIL;
                 }
+				id = in.readByte();
                 return codes.REGISTERSUCCESS;
             }
             else//some sort of error

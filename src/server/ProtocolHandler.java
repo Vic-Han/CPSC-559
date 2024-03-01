@@ -106,13 +106,16 @@ public class ProtocolHandler {
             //System.out.println("Username: " + username + " Password: " + password);
             int loginReq = MasterDatabase.loginUser(username, password);
             //gui should return the clientID so we can store it in the instance of the client to help with share requests and such later (prevents an extra DB lookup)
+            System.out.println("Got here");
             if(loginReq>=0) {
+            	System.out.println("Login Success");
                 os.writeByte(codes.LOGINSUCCESS);
+                os.writeByte(loginReq);
             } else {
+            	System.out.println("Login Fail");
                 os.writeByte(codes.LOGINFAIL);
                 os.writeUTF("Error message");
             }
-            os.writeByte(loginReq);
 
         } catch(IOException e) {
             e.printStackTrace();
@@ -123,7 +126,7 @@ public class ProtocolHandler {
     // should return the userID to the client, -1 on failure
     public void handleRegisterRequest() {
         try{
-            //send respone code back
+            //send response code back
             os.writeByte(codes.REGISTERRESPONSE);
             String username = is.readUTF();
             String password = is.readUTF();
@@ -144,11 +147,12 @@ public class ProtocolHandler {
             //successful registration
             if(registerReq >= 0) {
                 os.writeByte(codes.REGISTERSUCCESS);
+                os.writeByte(registerReq);
+
             } else {
                 os.writeByte(codes.REGISTERFAIL);
                 os.writeUTF("Error message");
             }
-            os.writeByte(registerReq);
 
 
         } catch(IOException e) {
