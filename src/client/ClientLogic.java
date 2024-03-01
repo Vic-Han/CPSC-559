@@ -159,7 +159,7 @@ public class ClientLogic {
         }
     }
 
-    public byte downloadRequest(String filename, int userID){
+    public byte downloadRequest(String filename){
         try{
         	
             out.writeByte(codes.DOWNLOADREQUEST);

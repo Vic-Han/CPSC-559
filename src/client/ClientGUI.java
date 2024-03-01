@@ -19,6 +19,7 @@ public class ClientGUI extends Application {
 
     private Stage primaryStage;
     private static ClientLogic clientLogic;
+    private static String usrname;
     public static void main(String[] args) {
         clientLogic = new ClientLogic("localhost",1969);
         launch(args);
@@ -76,7 +77,7 @@ public class ClientGUI extends Application {
         primaryStage.show();
     }
 
-    private void showMainPage(String username){
+    private void showMainPage(){
         primaryStage.setTitle("File Transfer App");
 
         // UI components
@@ -86,7 +87,7 @@ public class ClientGUI extends Application {
 
         // Event handlers
         uploadButton.setOnAction(e -> uploadFile(primaryStage));
-        downloadButton.setOnAction(e -> downloadFile(primaryStage));
+        downloadButton.setOnAction(e -> showDownloadPage(primaryStage));
         shareButton.setOnAction(e -> shareFiles(primaryStage));
 
         // Layout
@@ -95,7 +96,7 @@ public class ClientGUI extends Application {
         HBox buttonBox = new HBox(10);
         buttonBox.getChildren().addAll(uploadButton, downloadButton);
 
-        Label titleLabel = new Label(username+"'s File Transfer App");
+        Label titleLabel = new Label(usrname+"'s File Transfer App");
         titleLabel.setStyle("-fx-font-size: 24; -fx-font-weight: bold;");
 
         vbox.getChildren().addAll(titleLabel, buttonBox, shareButton);
@@ -111,6 +112,42 @@ public class ClientGUI extends Application {
         primaryStage.show();
     }
 
+    private void showDownloadPage(Stage primaryStage){
+        // Layout
+        VBox vbox = new VBox(10); // 10 pixels spacing between elements
+        vbox.setPadding(new Insets(20)); // 20 pixels padding around the VBox
+        // Place login and register buttons horizontally using HBox
+        HBox buttonBox = new HBox(10);
+
+        // UI components
+        Label titleLabel = new Label("File Transfer App");
+        titleLabel.setStyle("-fx-font-size: 24; -fx-font-weight: bold;");
+
+        TextField fileField = new TextField();
+        fileField.setPromptText("File to Download");
+        fileField.getStyleClass().add("text-field");
+
+        Button downloadButton = new Button("Select Destination Folder");
+        downloadButton.getStyleClass().add("button");
+
+        buttonBox.getChildren().addAll(downloadButton);
+
+        // Event handler
+        downloadButton.setOnAction(e -> downloadFile(primaryStage, fileField.getText()));
+        
+        vbox.getChildren().addAll(titleLabel, fileField, buttonBox);
+        vbox.setAlignment(javafx.geometry.Pos.CENTER);
+        buttonBox.setAlignment(javafx.geometry.Pos.CENTER);
+
+        // Scene
+        Scene scene = new Scene(new BorderPane(vbox), 300, 200);
+
+        // Apply 'dark mode' stylesheet
+        scene.getStylesheets().add(getClass().getResource("resources/dark-mode.css").toExternalForm());
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
     private void handleLogin(String username, String password) {
         System.out.println("Username: " + username + "\tPassword: " + password);
         int req = clientLogic.loginRequest(username, password);
@@ -118,7 +155,8 @@ public class ClientGUI extends Application {
         switch(req){
             case codes.LOGINSUCCESS:
                 System.out.println("Successful login");
-                showMainPage(username);
+                usrname = username;
+                showMainPage();
                 break;
             case codes.LOGINFAIL:
                 System.out.println("Intruder Alert");
@@ -137,7 +175,8 @@ public class ClientGUI extends Application {
         switch(req){
             case codes.REGISTERSUCCESS:
                 System.out.println("Successful Registration");
-                showMainPage(username);
+                usrname = username;
+                showMainPage();
                 break;
             case codes.REGISTERFAIL:
                 System.out.println("Failed Reg LOL");
@@ -172,23 +211,30 @@ public class ClientGUI extends Application {
         }
     }
 
-    private void downloadFile(Stage primaryStage) {
+    private void downloadFile(Stage primaryStage, String fileName) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Select Destination Directory");
         File selectedDirectory = directoryChooser.showDialog(primaryStage);
-        System.out.println(selectedDirectory.getAbsolutePath() + " selected (won't go there yet)");
-
+        System.out.println(fileName + " -> " + selectedDirectory.getAbsolutePath());
         if (selectedDirectory != null) {
             try {
-                // file download logic here
-                // temporarily just create an empty file
-                File dummyFile = new File(selectedDirectory, "downloaded_file.txt");
-                Files.createFile(dummyFile.toPath());
-                System.out.println("File downloaded to: " + selectedDirectory.getAbsolutePath());
-            } catch (IOException e) {
-                System.out.println("FAILED to download to: " + selectedDirectory.getAbsolutePath());
+                byte req = clientLogic.downloadRequest(fileName);
+                
+                switch(req){
+                    case codes.DOWNLOADSUCCESS:
+                        System.out.println("Successful download of " + fileName + " to " + selectedDirectory.getAbsolutePath());
+                        break;
+                    case codes.DOWNLOADFAIL:
+                        System.out.println("Failed download :(");
+                        break;
+                    default: // error
+                        System.out.println("Something broke (download)");
+                }
+            } catch (Exception e) {
+                System.out.println("FAILED to download " + fileName + " to: " + selectedDirectory.getAbsolutePath());
             }
         }
+        showMainPage();
     }
 
     private void shareFiles(Stage primaryStage){
