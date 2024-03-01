@@ -68,18 +68,23 @@ public class ProtocolHandler {
             os.writeByte(codes.DOWNLOADRESPONSE);//send response to client so the client can proceed
             String fileName = is.readUTF();
             try{
-            File file = new File(PREPEND+fileName);
-            FileInputStream fis = new FileInputStream(file);
-            os.writeLong(file.length()); //give file length to the client requesting so they know how long to download for 
-            byte[] buf = new byte[4096]; //4kb buffer
-            int read;
-            while ((read = fis.read(buf)) != -1) {
-                os.write(buf, 0, read);
-                os.flush();
+	            File file = new File(PREPEND+fileName);
+	            FileInputStream fis = new FileInputStream(file);
+	            os.writeLong(file.length()); //give file length to the client requesting so they know how long to download for 
+	            os.flush();
+	            System.out.println("filename: "+fileName);
+	            byte[] buf = new byte[4096]; //4kb buffer
+	            int read;
+	            while ((read = fis.read(buf)) != -1) {
+	            	System.out.println("first byte of current buf: "+buf[1]);
+	                os.write(buf, 0, read);
+	                os.flush();
+	            }
+	            fis.close();
+	            os.writeByte(codes.DOWNLOADSUCCESS); 
+	            System.out.println("Finished");
             }
-            fis.close();
-            os.writeByte(codes.DOWNLOADSUCCESS); 
-            }catch(NoSuchFileException f)
+            catch(NoSuchFileException f)
             {
                 os.writeByte(codes.NOSUCHFILE);
             }

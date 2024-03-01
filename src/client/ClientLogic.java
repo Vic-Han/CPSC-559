@@ -170,14 +170,14 @@ public class ClientLogic {
                 long fileSize = in.readLong(); 
                 
                 FileOutputStream fileOS = new FileOutputStream(file, false); //false so it doesn't append to the file if it exists (we could use this to resume downloads if one fails later potentially)
-
                 byte[] buffer = new byte[4096];
-                int bytesRead; 
+                int bytesRead = 0; 
                 long totalRead = 0; 
 
                 while(totalRead < fileSize)
                 {
-                    bytesRead = in.read(buffer, 0, buffer.length); 
+                    bytesRead = in.read(buffer, 0, Math.min(buffer.length, Math.min(buffer.length, (int)fileSize-bytesRead)));
+                    System.out.println("first byte of current buf: "+buffer[1]);
                     fileOS.write(buffer,0,bytesRead);
                     totalRead += bytesRead;
                 }
