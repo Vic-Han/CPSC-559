@@ -143,6 +143,7 @@ public class ProtocolHandler {
             }
 
             int registerReq = MasterDatabase.registerUser(username, password);
+            System.out.println("Registration Returned: "+registerReq);
 
             //successful registration
             if(registerReq >= 0) {

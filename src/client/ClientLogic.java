@@ -102,7 +102,8 @@ public class ClientLogic {
                 //byte user = in.readByte(); 
                 //if (user == codes.USEREXISTS) then the user already exists and thus we cant create new user with same name 
                 out.writeUTF(password);//should be hashed
-                byte returned = in.readByte(); 
+                byte returned = in.readByte();
+                System.out.println("Returned: " + returned);
                 if(returned == codes.PASSWORDINVALID)
                 {
                     return codes.PASSWORDINVALID; 
