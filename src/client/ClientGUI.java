@@ -215,14 +215,15 @@ public class ClientGUI extends Application {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Select Destination Directory");
         File selectedDirectory = directoryChooser.showDialog(primaryStage);
-        System.out.println(fileName + " -> " + selectedDirectory.getAbsolutePath());
+        String dest = selectedDirectory.getAbsolutePath();
+        System.out.println(fileName + " -> " + dest);
         if (selectedDirectory != null) {
             try {
-                byte req = clientLogic.downloadRequest(fileName);
+                byte req = clientLogic.downloadRequest(dest, fileName);
                 
                 switch(req){
                     case codes.DOWNLOADSUCCESS:
-                        System.out.println("Successful download of " + fileName + " to " + selectedDirectory.getAbsolutePath());
+                        System.out.println("Successful download of " + fileName + " to " + dest);
                         break;
                     case codes.DOWNLOADFAIL:
                         System.out.println("Failed download :(");
@@ -231,7 +232,7 @@ public class ClientGUI extends Application {
                         System.out.println("Something broke (download)");
                 }
             } catch (Exception e) {
-                System.out.println("FAILED to download " + fileName + " to: " + selectedDirectory.getAbsolutePath());
+                System.out.println("FAILED to download " + fileName + " to: " + dest);
             }
         }
         showMainPage();

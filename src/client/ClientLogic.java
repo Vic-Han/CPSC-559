@@ -159,7 +159,7 @@ public class ClientLogic {
         }
     }
 
-    public byte downloadRequest(String filename){
+    public byte downloadRequest(String destination, String filename){
         try{
         	
             out.writeByte(codes.DOWNLOADREQUEST);
@@ -167,8 +167,8 @@ public class ClientLogic {
             if(response == codes.DOWNLOADRESPONSE)
             {
                 out.writeUTF(filename);//send filename to server 
-                String PREPEND = "C:\\CPSC559Proj\\CLIENTFILES\\"; //TODO: solidify this?
-                File file = new File(PREPEND+filename);
+                //String PREPEND = "C:\\CPSC559Proj\\CLIENTFILES\\"; //TODO: solidify this?
+                File file = new File(destination+"\\"+filename);
                 // file.getParentFile().mkdirs(); creates parent dir if it doesn't exist
                 file.createNewFile(); //ensures that it doesn't already exist
                 long fileSize = in.readLong(); 
