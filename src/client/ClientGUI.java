@@ -176,6 +176,7 @@ public class ClientGUI extends Application {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Select Destination Directory");
         File selectedDirectory = directoryChooser.showDialog(primaryStage);
+        System.out.println(selectedDirectory.getAbsolutePath() + " selected (won't go there yet)");
 
         if (selectedDirectory != null) {
             try {
