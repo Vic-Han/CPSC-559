@@ -6,7 +6,10 @@ import javafx.scene.layout.BorderPane; import javafx.scene.layout.VBox; import j
 import javafx.scene.control.TextField; import javafx.scene.control.PasswordField; import javafx.stage.Stage;
 import javafx.stage.FileChooser; import javafx.scene.layout.HBox; import javafx.scene.control.TextInputDialog;
 import java.io.IOException; import java.io.File; import java.nio.file.Files;
-import javafx.stage.FileChooser; 
+import javafx.stage.FileChooser; import javafx.collections.FXCollections;
+import javafx.collections.ObservableList; import javafx.scene.control.ComboBox;
+
+import java.util.ArrayList;
 import java.util.Optional;
 
 import Utilities.codes;
@@ -123,9 +126,13 @@ public class ClientGUI extends Application {
         Label titleLabel = new Label("File Transfer App");
         titleLabel.setStyle("-fx-font-size: 24; -fx-font-weight: bold;");
 
-        TextField fileField = new TextField();
-        fileField.setPromptText("File to Download");
-        fileField.getStyleClass().add("text-field");
+        ComboBox<String> fileComboBox = new ComboBox<>();
+        fileComboBox.setPromptText("Select File to Download");
+        fileComboBox.getStyleClass().add("combo-box");
+
+        // Populate the ComboBox with data from your ArrayList
+        ObservableList<String> fileOptions = FXCollections.observableArrayList(getAvailableFiles());
+        fileComboBox.setItems(fileOptions);
 
         Button downloadButton = new Button("Select Destination Folder");
         downloadButton.getStyleClass().add("button");
@@ -133,9 +140,9 @@ public class ClientGUI extends Application {
         buttonBox.getChildren().addAll(downloadButton);
 
         // Event handler
-        downloadButton.setOnAction(e -> downloadFile(primaryStage, fileField.getText()));
+        downloadButton.setOnAction(e -> downloadFile(primaryStage, fileComboBox.getValue())); //fileField.getText()
         
-        vbox.getChildren().addAll(titleLabel, fileField, buttonBox);
+        vbox.getChildren().addAll(titleLabel, fileComboBox, buttonBox);
         vbox.setAlignment(javafx.geometry.Pos.CENTER);
         buttonBox.setAlignment(javafx.geometry.Pos.CENTER);
 
@@ -259,6 +266,12 @@ public class ClientGUI extends Application {
                 System.out.println("FAILED to select: " + selectedFile.getName());
             }
         }
+    }
+
+    private ArrayList<String> getAvailableFiles(){
+        ArrayList<String> arr = new ArrayList<>();
+        arr.add("courses.txt"); // obviously change later
+        return arr;
     }
 }
 
