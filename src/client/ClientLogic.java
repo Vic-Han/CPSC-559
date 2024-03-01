@@ -177,7 +177,6 @@ public class ClientLogic {
                 while(totalRead < fileSize)
                 {
                     bytesRead = in.read(buffer, 0, Math.min(buffer.length, Math.min(buffer.length, (int)fileSize-bytesRead)));
-                    System.out.println("first byte of current buf: "+buffer[1]);
                     fileOS.write(buffer,0,bytesRead);
                     totalRead += bytesRead;
                 }
