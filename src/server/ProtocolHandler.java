@@ -2,6 +2,7 @@ package server;
 
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
+import java.util.ArrayList;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -33,6 +34,7 @@ public class ProtocolHandler {
             os.writeByte(codes.UPLOADRESPONSE); //so client knows it can start passing other important information 
             String fileName = is.readUTF();
             long fileSize = is.readLong();
+            int userID = is.readByte();
             //create new file incase the file already exists (MAYBE WE SHOULD DO A DATABASE CHECK HERE IDK)
             File file = new File(PREPEND+fileName); 
             file.createNewFile(); //ensures file isn't already there? or just will create a new version idk the exact working of this 
@@ -47,6 +49,7 @@ public class ProtocolHandler {
                 totalRead += read; 
             }
             fos.close();
+            MasterDatabase.addFile(fileName, userID);
             os.writeByte(codes.UPLOADSUCCESS);
         } catch(IOException e) {
             e.printStackTrace();
@@ -101,14 +104,16 @@ public class ProtocolHandler {
             String username = is.readUTF();
             String password = is.readUTF();
             //System.out.println("Username: " + username + " Password: " + password);
-            //if password matches for username
+            int loginReq = MasterDatabase.loginUser(username, password);
             //gui should return the clientID so we can store it in the instance of the client to help with share requests and such later (prevents an extra DB lookup)
-            if(true) {
+            if(loginReq>=0) {
                 os.writeByte(codes.LOGINSUCCESS);
             } else {
                 os.writeByte(codes.LOGINFAIL);
                 os.writeUTF("Error message");
             }
+            os.writeByte(loginReq);
+
         } catch(IOException e) {
             e.printStackTrace();
         }
@@ -123,6 +128,7 @@ public class ProtocolHandler {
             String username = is.readUTF();
             String password = is.readUTF();
 
+            
             //if username already taken or password blank should return error code 
             //if (username already in database){
             //os.writeByte(codes.USEREXISTS); return}
@@ -133,16 +139,18 @@ public class ProtocolHandler {
                 return; 
             }
 
-            //successful registration 
-            os.writeByte(codes.REGISTERSUCCESS);
+            int registerReq = MasterDatabase.registerUser(username, password);
 
-            //Register user and return status
-            // if(true) {
-            //     os.writeByte(codes.OK);
-            // } else {
-            //     os.writeByte(codes.REGISTERFAIL);
-            //     os.writeUTF("Error message");
-            // }
+            //successful registration
+            if(registerReq >= 0) {
+                os.writeByte(codes.REGISTERSUCCESS);
+            } else {
+                os.writeByte(codes.REGISTERFAIL);
+                os.writeUTF("Error message");
+            }
+            os.writeByte(registerReq);
+
+
         } catch(IOException e) {
             e.printStackTrace();
         }
@@ -273,6 +281,17 @@ public class ProtocolHandler {
         int userID = is.readInt(); 
 
         //check if userID is actually in system 
+        ArrayList<String> owned = MasterDatabase.getAllOwnedFiles(userID);
+        ArrayList<String> shared = MasterDatabase.getAllSharedFiles(userID);
+        ArrayList<Pair<String,String>> allFiles = new ArrayList<Pair<String,String>>();
+        for(String s : owned) {
+        	allFiles.add(new Pair(s,"own"));
+        }
+        for(String s : shared) {
+        	allFiles.add(new Pair(s,"share"));
+        }
+        //TODO: Send list allFiles over socket connection
+        
         //if(valid user id from caller (client)){
             os.writeByte(codes.USEREXISTS); 
             os.writeByte(codes.GETALLSUCCESS); //if successful 

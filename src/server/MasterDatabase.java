@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class MasterDatabase {
 
-    static String url = "jdbc:sqlite:src/server/database/server.db";
+    static String url = "jdbc:sqlite:server/database/server.db";
     private static Connection conn = null;
     
 	private static void listEntries() {
@@ -126,7 +126,7 @@ public class MasterDatabase {
             //Return the UserID of the inserted user.
             return getUserID(username);
         }catch(Exception e) {
-        	//e.printStackTrace();;
+        	e.printStackTrace();
             return -1;
         }
 
@@ -153,6 +153,7 @@ public class MasterDatabase {
             }
 
         }catch(Exception e) {
+        	e.printStackTrace();
             return -1;
         }
 
