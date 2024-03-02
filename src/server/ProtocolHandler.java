@@ -281,27 +281,35 @@ public class ProtocolHandler {
 
     public void handleAllFilesRequest(){
         try{
-        os.writeByte(codes.GETALLFILESRESPONSE);
-
-        int userID = is.readInt(); 
-
-        //check if userID is actually in system 
-        ArrayList<String> owned = MasterDatabase.getAllOwnedFiles(userID);
-        ArrayList<String> shared = MasterDatabase.getAllSharedFiles(userID);
-        ArrayList<Pair<String,String>> allFiles = new ArrayList<Pair<String,String>>();
-        for(String s : owned) {
-        	allFiles.add(new Pair(s,"own"));
-        }
-        for(String s : shared) {
-        	allFiles.add(new Pair(s,"share"));
-        }
-        //TODO: Send list allFiles over socket connection
-        
-        //if(valid user id from caller (client)){
-            os.writeByte(codes.USEREXISTS); 
-            os.writeByte(codes.GETALLSUCCESS); //if successful 
-            //if unsuccessful os.writeByte(codes.GETALLFAIL);
-        //}
+	        os.writeByte(codes.GETALLFILESRESPONSE);
+	
+	        int userID = is.readInt(); 
+	
+	        //check if userID is actually in system 
+	        ArrayList<String> owned = MasterDatabase.getAllOwnedFiles(userID);
+	        ArrayList<String> shared = MasterDatabase.getAllSharedFiles(userID);
+	        ArrayList<Pair<String,String>> allFiles = new ArrayList<Pair<String,String>>();
+	        for(String s : owned) {
+	        	allFiles.add(new Pair<String, String>(s,"own"));
+	        }
+	        for(String s : shared) {
+	        	allFiles.add(new Pair<String, String>(s,"share"));
+	        }
+	        //TODO: Send list allFiles over socket connection
+	        //if(valid user id from caller (client)){
+	            os.writeByte(codes.USEREXISTS); 
+	            os.writeShort(allFiles.size());
+	            allFiles.forEach((i) ->{
+		        	try {
+		        		os.writeUTF(i.first);
+						os.writeUTF(i.second);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+		        });
+	            //os.writeByte(codes.GETALLSUCCESS); //if successful 
+	            //if unsuccessful os.writeByte(codes.GETALLFAIL);
+	        //}
         }catch(Exception e)
         {
             e.printStackTrace();

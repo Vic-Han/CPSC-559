@@ -8,8 +8,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 
-import Utilities.codes;
+import Utilities.*;
 
 
 
@@ -343,8 +344,10 @@ public class ClientLogic {
     	}
     }
 
-    public byte getAllFilesRequest(int userID)
+    public ArrayList<Pair<String, String>> getAllFilesRequest(int userID)
     {
+    	ArrayList<Pair<String,String>> errorReturn = new ArrayList<Pair<String,String>>();
+    	errorReturn.add(new Pair<String, String>("", "Error"));
     	try {
 	        out.writeByte(codes.GETALLFILESREQUEST); 
 	
@@ -352,29 +355,33 @@ public class ClientLogic {
 	
 	        if(response == codes.GETALLFILESRESPONSE)
 	        {
-	            //do stuff
-	
-	
 	            //PROBABLY SHOULD HAVE SOME SORT OF INSTANCE OF USERID TO ACTUALLY VALIDATE AGAINST OR THE GUI INPUTS THE USERID NOT THE USER THEMSELVES OR THEY COULD RETRIEVE OTHER PEOPLES FILES
 	            out.writeInt(userID); 
 	            byte doesUserExist = in.readByte(); 
 	            if(doesUserExist == codes.USEREXISTS)
 	            {
-	                byte finalResponse = in.readByte(); 
-	                return finalResponse; 
+	            	short records = in.readShort();
+	            	ArrayList<Pair<String,String>> allFiles = new ArrayList<Pair<String,String>>();
+	            	for(int i = 0; i < records; i++) {
+	            		String name = in.readUTF();
+						String perm = in.readUTF();
+						allFiles.add(new Pair<String, String>(name, perm));
+	            	}
+	                //byte finalResponse = in.readByte(); 
+	                return allFiles; 
 	            }
 	            else
 	            {
-	                return codes.ERR; //wrong user input somehow
+	                return errorReturn; //wrong user input somehow
 	            }
 	        }
 	        else
 	        {
-	            return codes.ERR; 
+	            return errorReturn; 
 	        }
     	} catch(IOException e) {
     		e.printStackTrace();
-    		return codes.ERR;
+    		return errorReturn;
     	}
     }
 }
