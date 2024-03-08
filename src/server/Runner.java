@@ -12,11 +12,16 @@ import Utilities.codes;
 
 public class Runner extends Thread {
 
-// Constructor
+  /** 
+  * Constructor
+  * @param s the socket to be used for communication
+  */
   public Runner(Socket s) {
     this.s = s;
   }
-
+  /**
+   * The run method of the thread
+  */
   public void run() {
 
     System.out.println("\nNew Thread: " + Runner.currentThread());
