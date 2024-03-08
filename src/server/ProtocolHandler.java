@@ -28,7 +28,10 @@ public class ProtocolHandler {
     // private void handleUploadRequest(String fileName, int userID, String ClientIP, int ClientPort) {
     	
     // }
-    
+    /**
+     * This method is called when the server recieves a request to upload a file
+     * It should tell the client the worker IP and port number
+     */
     public void workerHandleUploadRequest() {
         try {
             os.writeByte(codes.UPLOADRESPONSE); //so client knows it can start passing other important information 
@@ -56,8 +59,7 @@ public class ProtocolHandler {
         }
     }
     
-    // method that is called when the server recieves a request to download a file
-    // should tell the client the worker IP and port number that has the download
+    
     // private void handleDownloadRequest(String fileName, int userID, String ClientIP, int ClientPort) {
     // 	//LOAD BALANCER
     // 	// Get available worker
@@ -66,6 +68,10 @@ public class ProtocolHandler {
     	
     // }
 
+    /**
+     * This method is called when the server recieves a request to download a file
+     * It should send the file to the worker
+     */
     public void workerHandleDownloadRequest() {
         try {
             os.writeByte(codes.DOWNLOADRESPONSE);//send response to client so the client can proceed
@@ -97,8 +103,10 @@ public class ProtocolHandler {
         }
     }
 
-    // method that is called when the server recieves a request to login
-    // should return the userID to the client, -1 on failure
+    /**
+     * This method is called when the server recieves a request to login
+     * It should return the userID to the client, an err code on failure
+     */
     public void handleLoginRequest() {
         try{
             String username = is.readUTF();
@@ -161,8 +169,10 @@ public class ProtocolHandler {
         }
     }
 
-    // method that is called when the server recieves a request to share a file
-    // should return a success or failure message to the client
+    /**
+     * This method is called when the server recieves a request to share a file
+     * It should return a success or failure message to the client
+     */
     public void handleShareRequest() {
         try {
             os.writeByte(codes.SHARERESPONSE); //write response to client to tell them we are starting to handle the share request 
@@ -208,8 +218,10 @@ public class ProtocolHandler {
         }
     }
 
-    // method that is called when the server recieves a request to unshare a file
-    // should return a success or failure message to the client
+    /**
+     * This method is called when the server recieves a request to unshare a file
+     * It should return a success or failure message to the client
+     */
     public void handleUnshareRequest() {
 
         try{
@@ -273,12 +285,11 @@ public class ProtocolHandler {
 
     }
 
-    // method that is called when the server recieves a request to see all files the user can download
-    // should tell the client the file names and permissions(owner/shared w me)
-    // private void handleGetAllFilesRequest(int userID, String ClientIP, int ClientPort) {
-
-    // }
-
+  
+    /**
+     * This method is called when the server recieves a request to see all files the user can download
+     * It should tell the client the file names and permissions(owner/shared w me)
+     */
     public void handleAllFilesRequest(){
         try{
 	        os.writeByte(codes.GETALLFILESRESPONSE);
@@ -318,8 +329,10 @@ public class ProtocolHandler {
 
     }
 
-    // method that is called when the server recieves a request to delete a file
-    // should return a success or failure message to the client
+    /**
+     * This method is called when the server recieves a request to delete a file
+     * It should return a success or failure message to the client
+     */
     public void handleDeleteRequest() {
         try {
             os.writeByte(codes.DELETERESPONSE); 
