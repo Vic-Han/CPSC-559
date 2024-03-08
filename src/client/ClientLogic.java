@@ -344,7 +344,7 @@ public class ClientLogic {
     	}
     }
 
-    public ArrayList<Pair<String, String>> getAllFilesRequest(int userID)
+    public ArrayList<Pair<String, String>> getAllFilesRequest()
     {
     	ArrayList<Pair<String,String>> errorReturn = new ArrayList<Pair<String,String>>();
     	errorReturn.add(new Pair<String, String>("", "Error"));
@@ -356,7 +356,7 @@ public class ClientLogic {
 	        if(response == codes.GETALLFILESRESPONSE)
 	        {
 	            //PROBABLY SHOULD HAVE SOME SORT OF INSTANCE OF USERID TO ACTUALLY VALIDATE AGAINST OR THE GUI INPUTS THE USERID NOT THE USER THEMSELVES OR THEY COULD RETRIEVE OTHER PEOPLES FILES
-	            out.writeInt(userID); 
+	            out.writeInt(id); 
 	            byte doesUserExist = in.readByte(); 
 	            if(doesUserExist == codes.USEREXISTS)
 	            {

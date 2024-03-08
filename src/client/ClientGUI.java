@@ -12,6 +12,7 @@ import javafx.collections.ObservableList; import javafx.scene.control.ComboBox;
 import java.util.ArrayList;
 import java.util.Optional;
 
+import Utilities.Pair;
 import Utilities.codes;
 
 // run/compile within gui directory using
@@ -269,9 +270,13 @@ public class ClientGUI extends Application {
     }
 
     private ArrayList<String> getAvailableFiles(){
-        ArrayList<String> arr = new ArrayList<>();
-        arr.add("demo.txt"); // obviously change later
-        return arr;
+        ArrayList<String> ret = new ArrayList<>();
+        ArrayList<Pair<String, String>> all = clientLogic.getAllFilesRequest();
+        for (Pair<String,String> pair : all) {
+            System.out.println(pair.first+" & "+pair.second);
+            if(pair.second.equals("own")) ret.add(pair.first);
+        }
+        return ret;
     }
 }
 
