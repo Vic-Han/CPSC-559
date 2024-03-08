@@ -35,4 +35,4 @@ or
 
 `bash: make: command not found` 
 
-on Windows, install MinGW replace `make` with `mingw32-make`
+on Windows, install MinGW and replace `make` with `mingw32-make`
