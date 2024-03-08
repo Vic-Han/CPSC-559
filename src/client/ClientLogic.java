@@ -27,13 +27,12 @@ public class ClientLogic {
     Socket socket; 
     //private int userID;
 
-    //default constructor to assign null values 
-    // public ClientLogic(){
-    //     this.host = "";
-    //     this.port = -1; 
-    // }
 
-    //constructor called when given host and port to instantiate variables associated
+	/**
+     * Create an instance of the ClientLogic class to make requests to server.
+     * @param host - The IP address to connect to as a String
+     * @param port - The port number to connect to as an int
+     */
     public ClientLogic(String host, int port)
     {
         //this.host = host; 
@@ -55,11 +54,15 @@ public class ClientLogic {
         	this.in = null;
         }
     }
-    
+    /**
+	 * 
+	 */
     public boolean isConnected() {
     	return this.socket == null;
     }
-    
+    /**
+	 * 
+	 */
     public void stop() {
     	try {
     		out.writeByte(codes.QUIT);
@@ -68,7 +71,18 @@ public class ClientLogic {
     		e.printStackTrace();
     	}
     }
-    
+    /**
+	 * 
+	 */
+	public void setID(byte id) {
+		this.id = id;
+	}
+	/**
+	 * Sends a request to the server to login a user.
+	 * @param username The username of the user to login as a String
+	 * @param password The password of the user to login as a String
+	 * @return The response code from the server as an int
+	 */
     public int loginRequest(String username, String password) {
     	try {
     		out.writeByte(codes.LOGINREQUEST);
@@ -92,7 +106,12 @@ public class ClientLogic {
             return codes.ERR;
     	}
     }
-
+	/**
+	 * Sends a request to the server to login a user.
+	 * @param username The username of the user to login as a String
+	 * @param password The password of the user to login as a String
+	 * @return The response code from the server as an int
+	 */
     public int registerRequest(String username, String password) {
     	try {
             out.writeByte(codes.REGISTERREQUEST);
@@ -126,7 +145,11 @@ public class ClientLogic {
             return codes.ERR;
     	}
     }
-
+	/**
+	 * Sends a request to the server to logout a user.
+	 * @param file The file that the user wants to upload as a File
+	 * @return The response code from the server as an byte
+	 */
     public byte uploadRequest(File file){
         try{
         	out.writeByte(codes.UPLOADREQUEST); //send request to server
@@ -164,7 +187,12 @@ public class ClientLogic {
         	return codes.ERR; 
         }
     }
-
+	/**
+	 * Sends a request to the server to download a file.
+	 * @param destination The destination to save the file as a String
+	 * @param filename The name of the file to download as a String
+	 * @return The response code from the server as an byte
+	 */
     public byte downloadRequest(String destination, String filename){
         try{
         	
@@ -220,8 +248,13 @@ public class ClientLogic {
             return codes.ERR; 
         }
     }
-
-    //fileName is the name of the file which user wants to share 
+	/**
+	 * Sends a request to the server to share a file.
+	 * @param fileName The name of the file to share as a String
+	 * @param sharedUser The user to share the file with as a String
+	 * @param idSharer The id of the user sharing the file as an int
+	 * @return The response code from the server as an byte
+	 */ 
     public byte shareRequest(String fileName, String sharedUser, int idSharer){
     	try {
 	        out.writeByte(codes.SHAREREQUEST); //send request to server to start share request functionality 
@@ -266,7 +299,12 @@ public class ClientLogic {
     	}
 
     }
-    
+    /**
+	 * Sends a request to the server to unshare a file.
+	 * @param fileName The name of the file to unshare as a String
+	 * @param sharedUser The user to unshare the file with as a String
+	 * @param idSharer The id of the user unsharing the file as an int
+	 */
     public byte unshareRequest(String fileName, String sharedUser, int idSharer){
     	try {
 	        out.writeByte(codes.UNSHAREREQUEST); //send request to server to start share request functionality 
@@ -308,7 +346,12 @@ public class ClientLogic {
     		return codes.ERR;
     	}
     }
-
+	/**
+	 * Sends a request to the server to delete a file.
+	 * @param filePath The path of the file to delete as a String
+	 * @param userID The id of the user deleting the file as an int
+	 * @return The response code from the server as an byte
+	 */ 
     public byte deleteRequest(String filePath, int userID){
     	try {
 	        out.writeByte(codes.DELETEREQUEST); //send request to server
@@ -343,7 +386,12 @@ public class ClientLogic {
     		return codes.ERR;
     	}
     }
-
+	/**
+	 * Sends a request to the server to get all files.
+	 * @param userID The id of the user to get all files for as an int
+	 * @return The response code from the server as an byte
+	 * @return The response code from the server as an byte
+	 */ 
     public ArrayList<Pair<String, String>> getAllFilesRequest(int userID)
     {
     	ArrayList<Pair<String,String>> errorReturn = new ArrayList<Pair<String,String>>();

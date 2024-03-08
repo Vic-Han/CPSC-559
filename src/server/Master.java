@@ -4,6 +4,12 @@ import java.net.*;
 
 // class responsible for load balancing and managing workers
 public class Master {
+    /**
+     * The main method of the server
+     * 
+     * @param a command line arguments
+     * @throws IOException
+     */
     public static void main(String a[]) throws IOException {
         int port = 1969; 
         Socket s;
