@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class MasterDatabase {
 
-    static String url = "jdbc:sqlite:server/database/server.db";
+    static String url = "jdbc:sqlite:bin/server/database/server.db"; // added bin to account for new makefile
     private static Connection conn = null;
     
     /**

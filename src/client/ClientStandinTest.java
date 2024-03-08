@@ -5,7 +5,7 @@ import java.io.*;
 
 
 public class ClientStandinTest {
-
+/*
 	//port 
 	private static int SERVER_PORT = 1969; 
 	private static String SERVER_NAME = "127.0.0.1"; //will change when not running on local machine 
@@ -58,5 +58,5 @@ public class ClientStandinTest {
 
 
 
-
+*/
 }

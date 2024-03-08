@@ -24,7 +24,7 @@ public class ClientGUI extends Application {
     private static ClientLogic clientLogic;
     private static String usrname;
     public static void main(String[] args) {
-        clientLogic = new ClientLogic("localhost",1969);
+        clientLogic = new ClientLogic("localhost",1969); 
         launch(args);
     }
 
@@ -270,7 +270,7 @@ public class ClientGUI extends Application {
 
     private ArrayList<String> getAvailableFiles(){
         ArrayList<String> arr = new ArrayList<>();
-        arr.add("courses.txt"); // obviously change later
+        arr.add("demo.txt"); // obviously change later
         return arr;
     }
 }
