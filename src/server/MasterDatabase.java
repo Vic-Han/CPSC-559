@@ -153,7 +153,7 @@ public class MasterDatabase {
      * @return true if file exists, false if not
      */
     public static boolean isValidFile(String filename, int ownerID){
-    	String selectQuery = "SELECT COUNT(*) as fileCount FROM files WHERE WHERE owner =\'"+ownerID+"\' AND fileName = \'"+filename+"\'";
+    	String selectQuery = "SELECT COUNT(*) as fileCount FROM files WHERE owner =\'"+ownerID+"\' AND fileName = \'"+filename+"\'";
         
     	try {
     		//Execute the statement to add the file.
