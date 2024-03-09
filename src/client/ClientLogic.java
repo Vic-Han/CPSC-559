@@ -222,13 +222,14 @@ public class ClientLogic {
     }
 
     //fileName is the name of the file which user wants to share 
-    public byte shareRequest(String fileName, String sharedUser, int idSharer){
+    public byte shareRequest(String fileName, String sharedUser){
     	try {
 	        out.writeByte(codes.SHAREREQUEST); //send request to server to start share request functionality 
 	        byte response = in.readByte();  //get response that server is now running the share request functionality 
 	
 	        if(response == codes.SHARERESPONSE) //valid response from server
 	        {
+							out.writeInt(id);
 	            out.writeUTF(fileName); //send file name so we can check if it exists
 	            byte doesFileExist = in.readByte();  //read from server to see if the file actually exists
 	            //if file doesn't exist we should return as we can't share something not in the system duh
@@ -246,16 +247,10 @@ public class ClientLogic {
 	                return codes.NOSUCHUSER; 
 	            }
 	
-	            out.writeInt(idSharer);
 	            byte serverResponse = in.readByte(); 
-	
-	            //byte response = in.readByte(); 
-	           // out.writeInt(idReceiver);  
-	
+
 	            //validity checks already done.
 	            return serverResponse; 
-	            //return codes.OK
-	            //maybe implement codes.SHARESUCCESS
 	        }
 	        else {
 	            return codes.ERR; //something happened not sure if this can actually get hit though 
@@ -267,7 +262,7 @@ public class ClientLogic {
 
     }
     
-    public byte unshareRequest(String fileName, String sharedUser, int idSharer){
+    public byte unshareRequest(String fileName, String sharedUser){
     	try {
 	        out.writeByte(codes.UNSHAREREQUEST); //send request to server to start share request functionality 
 	        byte response = in.readByte();  //get response that server is now running the share request functionality 
@@ -292,7 +287,7 @@ public class ClientLogic {
 	                return codes.NOSUCHUSER; 
 	            }
 	
-	            out.writeInt(idSharer);
+	            out.writeInt(id);
 	            byte serverResponse = in.readByte(); 
 	
 	            //byte response = in.readByte(); 
@@ -309,7 +304,7 @@ public class ClientLogic {
     	}
     }
 
-    public byte deleteRequest(String filePath, int userID){
+    public byte deleteRequest(String filePath){
     	try {
 	        out.writeByte(codes.DELETEREQUEST); //send request to server
 	
@@ -327,7 +322,7 @@ public class ClientLogic {
 	
 	            //check if the user owns it with USEREXISTS
 	
-	            out.writeInt(userID); 
+	            out.writeInt(id); 
 	
 	            byte doesUserExist = in.readByte(); 
 	            if(doesUserExist == codes.NOSUCHUSER)

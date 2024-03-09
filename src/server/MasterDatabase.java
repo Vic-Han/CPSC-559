@@ -119,6 +119,58 @@ public class MasterDatabase {
         	return null;
         }
     }
+
+
+    /**
+     * Returns whether a DB entry exists for a given username
+     * @param username - the username of a potential user in DB
+     * @return true if user exists, false if not
+     */
+    public static boolean isValidUser(String username){
+    	String selectQuery = "SELECT COUNT(*) as userCount FROM users WHERE username =\'"+username+"\'";
+        
+    	try {
+    		//Execute the statement to add the file.
+        	Connection conn = getConnection();
+            Statement statement = conn.createStatement();
+            
+            //Get result set before deleting row
+            ResultSet rs = statement.executeQuery(selectQuery);
+          //Get File ID to delete anything in the shared table that references this file.
+            rs.next();
+            int userCount = rs.getInt("userCount");
+            return userCount > 0;
+    	}catch(Exception e) {
+    		e.printStackTrace();
+    		return false;
+    	}
+    }
+
+
+     /**
+     * Returns whether a DB entry exists for a given file name
+     * @param filename - the name of a potential file in DB
+     * @return true if file exists, false if not
+     */
+    public static boolean isValidFile(String filename, int ownerID){
+    	String selectQuery = "SELECT COUNT(*) as fileCount FROM files WHERE WHERE owner =\'"+ownerID+"\' AND fileName = \'"+filename+"\'";
+        
+    	try {
+    		//Execute the statement to add the file.
+        	Connection conn = getConnection();
+            Statement statement = conn.createStatement();
+            
+            //Get result set before deleting row
+            ResultSet rs = statement.executeQuery(selectQuery);
+          //Get File ID to delete anything in the shared table that references this file.
+            rs.next();
+            int fileCount = rs.getInt("fileCount");
+            return fileCount > 0;
+    	}catch(Exception e) {
+    		e.printStackTrace();
+    		return false;
+    	}
+    }
     
 
     /**
@@ -237,8 +289,9 @@ public class MasterDatabase {
      * @param sharedUser - The userID of the user to share the file to.
      * @return True if successful, False otherwise.
      */
-    public static boolean shareFile(String fileName, int owner, int sharedUser){
-    	String updateQuery = "INSERT INTO shared (fileID,sharedWith)\nVALUES (\'" + getFileID(fileName, owner) + "\',\'" + sharedUser + "\')";
+    public static boolean shareFile(String fileName, int owner, String sharedUser){
+        int shareID = getUserID(sharedUser);
+    	String updateQuery = "INSERT INTO shared (fileID,sharedWith)\nVALUES (\'" + getFileID(fileName, owner) + "\',\'" + shareID + "\')";
     	
     	try {
     		//Execute the statement to add the file.

@@ -253,7 +253,7 @@ public class ClientGUI extends Application {
         if (selectedFile != null) {
             try {
                 System.out.println("File selected: " + selectedFile.getName());
-                TextInputDialog dialog = new TextInputDialog();
+                /*TextInputDialog dialog = new TextInputDialog();
                 dialog.setTitle("User Input");
                 dialog.setHeaderText("Please enter the username you would like to share this file with:");
                 dialog.setContentText("Username:");
@@ -262,7 +262,7 @@ public class ClientGUI extends Application {
                 // Process the result
                 result.ifPresent(name -> {
                     System.out.println("Share with: " + name);
-                });
+                });*/
             } catch (Exception e) {
                 System.out.println("FAILED to select: " + selectedFile.getName());
             }
@@ -273,7 +273,7 @@ public class ClientGUI extends Application {
         ArrayList<String> ret = new ArrayList<>();
         ArrayList<Pair<String, String>> all = clientLogic.getAllFilesRequest();
         for (Pair<String,String> pair : all) {
-            System.out.println(pair.first+" & "+pair.second);
+            System.out.println(pair.first+" = "+pair.second);
             if(pair.second.equals("own")) ret.add(pair.first);
         }
         return ret;

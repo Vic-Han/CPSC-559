@@ -166,43 +166,23 @@ public class ProtocolHandler {
     public void handleShareRequest() {
         try {
             os.writeByte(codes.SHARERESPONSE); //write response to client to tell them we are starting to handle the share request 
+            
+            int userID = is.readInt(); 
             String filename = is.readUTF();
+            if(!MasterDatabase.isValidFile(filename,userID)){
+                os.writeByte(codes.NOSUCHFILE);
+                return; 
+            } else os.writeByte(codes.FILEEXISTS); 
 
-            //TODO:get file from server if it exists 
-            //byte doesFileExist = 
-            //if (file does not exist){
-                //os.writeByte(codes.NOSUCHFILE);
-                //return; 
-            //}
-            //else{ file must exist
-            os.writeByte(codes.FILEEXISTS); //file must exist so write OK
-            //}
-
-
-            //String owner = is.readUTF();
             String sharedTo = is.readUTF();
-
-            //TODO: do checks for if the user exists
-            //byte doesUserExist = 
-            //if (user does not exist){
-                //os.writeByte(codes.NOSUCHUSER);
-                //return; 
-            //}
-
-            os.writeByte(codes.USEREXISTS); 
-            int userID = is.readInt(); //should be valid if gui can check data base , if not we should do checks here on the files and such 
-            //Alternatively, we could get the userID of the sharer IF we instantiate it upon login and return it to the ClientLogic (client)
-
-
-            os.writeByte(codes.SHARESUCCESS); 
-            //boolean testValidity = true; 
-            //add share permission to database
-            // if(testValidity) {
-            //     os.writeByte(codes.SHARESUCCESS);
-            // } else {
-            //     os.writeByte(codes.SHAREFAIL);
-            //     //os.writeUTF("Error message");
-            // }
+            if(!MasterDatabase.isValidUser(sharedTo)){
+                os.writeByte(codes.NOSUCHUSER);
+                return; 
+            } else os.writeByte(codes.USEREXISTS); 
+            
+            boolean success = MasterDatabase.shareFile(filename, userID, sharedTo);
+            os.writeByte(success ? codes.SHARESUCCESS : codes.SHAREFAIL);
+            
         } catch (IOException e) {
             e.printStackTrace();
         }
