@@ -8,12 +8,10 @@ CLASSPATH := $(BIN_DIR)
 # Find all .java files in the specified directories
 CLIENT_FILES := $(wildcard $(SRC_DIR)/client/*.java)
 SERVER_FILES := $(wildcard $(SRC_DIR)/server/*.java)
-WORKER_FILES := $(wildcard $(SRC_DIR)/worker/*.java)
 UTILS_FILES := $(wildcard $(SRC_DIR)/Utilities/*.java)
 
 CLIENT_CLS := $(CLIENT_FILES:$(SRC_DIR)/client/%.java=$(BIN_DIR)/client/%.class)
 SERVER_CLS := $(SERVER_FILES:$(SRC_DIR)/server/%.java=$(BIN_DIR)/server/%.class)
-WORKER_CLS := $(WORKER_FILES:$(SRC_DIR)/worker/%.java=$(BIN_DIR)/worker/%.class)
 UTILS_CLS := $(UTILS_FILES:$(SRC_DIR)/Utilities/%.java=$(BIN_DIR)/Utilities/%.class)
 
 # Define the compiler, flags, and interpreter
@@ -22,7 +20,7 @@ JFLAGS := -d $(BIN_DIR)/ -cp $(SRC_DIR)/
 JAVA := java
 
 # Define the targets
-all: $(CLIENT_CLS) $(SERVER_CLS) $(WORKER_CLS) $(UTILS_CLS)
+all: $(CLIENT_CLS) $(SERVER_CLS) $(UTILS_CLS)
 	@echo "Compilation complete."
 
 # Compile client files
@@ -33,14 +31,9 @@ $(CLIENT_CLS): $(BIN_DIR)/client/%.class: $(SRC_DIR)/client/%.java
 $(SERVER_CLS): $(BIN_DIR)/server/%.class: $(SRC_DIR)/server/%.java
 	$(JAVAC) $(JFLAGS) --module-path $(LIB_DIR_SQLITE) $<
 
-# Compile worker files
-$(WORKER_CLS): $(BIN_DIR)/worker/%.class: $(SRC_DIR)/worker/%.java
-	$(JAVAC) $(JFLAGS) $<
-
 # Compile Utilities files
 $(UTILS_CLS): $(BIN_DIR)/Utilities/%.class: $(SRC_DIR)/Utilities/%.java
 	$(JAVAC) $(JFLAGS) $<
-
 
 server_run: all
 	@$(JAVA) -cp $(CLASSPATH) --module-path $(LIB_DIR_SQLITE) server.Master
