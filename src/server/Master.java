@@ -1,6 +1,7 @@
 package server;
 import java.io.*;
 import java.net.*;
+import Utilities.codes;
 
 // class responsible for load balancing and managing workers
 public class Master {
@@ -11,6 +12,15 @@ public class Master {
 
         // Create a server socket
         try (ServerSocket ss = new ServerSocket(port)) {
+            // contact load balancer to declare server for use
+            String lbip = "localhost";
+            int lbport =  1970;
+            Socket lb = new Socket(lbip, lbport);
+            DataOutputStream lbos = new DataOutputStream(lb.getOutputStream());
+            lbos.writeByte(codes.SERVERSTARTREQUEST);
+            lbos.writeUTF(ss.getInetAddress().getHostAddress());
+            lbos.writeInt(ss.getLocalPort());
+            lb.close();
             // daemon like thing
             while (true) {
             	System.out.println("Waiting for new connection");

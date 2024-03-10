@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.DatagramSocketImpl;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -42,8 +43,15 @@ public class ClientLogic {
         //Host string into useable IP address
 	    InetAddress address = InetAddress.getByName(host);
 	
+		Socket lb = new Socket(address, port);
+		DataInputStream lbis = new DataInputStream(lb.getInputStream());
+		DataOutputStream lbos = new DataOutputStream(lb.getOutputStream());
+		lbos.writeByte(Utilities.codes.CLIENTROUTEREQUEST);
+		String serverAddress = lbis.readUTF();
+		int serverPort = lbis.readInt();
+		lb.close();
 	    //Instantiate socket with given IP address and port number
-	    this.socket = new Socket(address, port);
+	    this.socket = new Socket(InetAddress.getByName(serverAddress), serverPort);
 	
 	    //instantiate output/input streams
 	    this.out = new DataOutputStream(this.socket.getOutputStream());
