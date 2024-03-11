@@ -298,6 +298,42 @@ public class ProtocolHandler {
 
     }
 
+    // method that is called when the server recieves a request to see all files the user has shared with others
+    // should tell the client the file names and usernames of who the file(s) are shared with
+
+
+    public void handleSharedFilesRequest(){
+        try{
+	        os.writeByte(codes.GETSHAREDFILESRESPONSE);
+	
+	        int userID = is.readInt(); 
+	
+	        //check if userID is actually in system 
+	        ArrayList<Pair<String,String>> shared = MasterDatabase.getUserSharedFiles(userID);
+
+	        //TODO: Send list allFiles over socket connection
+	        //if(valid user id from caller (client)){
+	            os.writeByte(codes.USEREXISTS); 
+	            os.writeShort(shared.size());
+	            shared.forEach((i) ->{
+		        	try {
+		        		os.writeUTF(i.first);
+						os.writeUTF(i.second);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+		        });
+	            //os.writeByte(codes.GETALLSUCCESS); //if successful 
+	            //if unsuccessful os.writeByte(codes.GETALLFAIL);
+	        //}
+        }catch(Exception e)
+        {
+            e.printStackTrace();
+            //os.writeByte(codes.GETALLFAIL);
+        }
+
+    }
+
     // method that is called when the server recieves a request to delete a file
     // should return a success or failure message to the client
     public void handleDeleteRequest() {

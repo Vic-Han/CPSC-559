@@ -379,4 +379,45 @@ public class ClientLogic {
     		return errorReturn;
     	}
     }
+
+		public ArrayList<Pair<String, String>> getSharedFilesRequest()
+    {
+    	ArrayList<Pair<String,String>> errorReturn = new ArrayList<Pair<String,String>>();
+    	errorReturn.add(new Pair<String, String>("", "Error"));
+    	try {
+	        out.writeByte(codes.GETSHAREDFILESREQUEST); 
+	
+	        byte response = in.readByte();
+	
+	        if(response == codes.GETSHAREDFILESRESPONSE)
+	        {
+	            //PROBABLY SHOULD HAVE SOME SORT OF INSTANCE OF USERID TO ACTUALLY VALIDATE AGAINST OR THE GUI INPUTS THE USERID NOT THE USER THEMSELVES OR THEY COULD RETRIEVE OTHER PEOPLES FILES
+	            out.writeInt(id); 
+	            byte doesUserExist = in.readByte(); 
+	            if(doesUserExist == codes.USEREXISTS)
+	            {
+	            	short records = in.readShort();
+	            	ArrayList<Pair<String,String>> sharedFiles = new ArrayList<Pair<String,String>>();
+	            	for(int i = 0; i < records; i++) {
+	            		String file = in.readUTF();
+									String user = in.readUTF();
+									sharedFiles.add(new Pair<String, String>(file, user));
+	            	}
+	                //byte finalResponse = in.readByte(); 
+	                return sharedFiles; 
+	            }
+	            else
+	            {
+	                return errorReturn; //wrong user input somehow
+	            }
+	        }
+	        else
+	        {
+	            return errorReturn; 
+	        }
+    	} catch(IOException e) {
+    		e.printStackTrace();
+    		return errorReturn;
+    	}
+    }
 }

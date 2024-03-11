@@ -2,6 +2,10 @@ package server;
 import java.sql.*;
 import java.util.ArrayList;
 
+import Utilities.Pair;
+
+import Utilities.Pair;
+
 public class MasterDatabase {
 
     static String url = "jdbc:sqlite:bin/server/database/server.db"; // added bin to account for new makefile
@@ -372,6 +376,29 @@ public class MasterDatabase {
             while(rs.next()) {
             	shared.add(getFileNameFromID(rs.getInt("fileID")));
             }
+        }catch(Exception e) {
+        	return null;
+        }
+    	
+        return shared;
+    }
+
+    /**
+     * 
+     * @param userID - The ID of the user to check shared files for
+     * @return 
+     */
+    public static ArrayList<Pair<String,String>> getUserSharedFiles(int userID){
+    	ArrayList<Pair<String,String>> shared = new ArrayList<Pair<String,String>>();
+    	// String query = "SELECT fileID, sharedWith FROM shared WHERE fileID IN (SELECT fileID FROM files WHERE owner = \'" + userID +"\')";
+    	// owen help sql's hard
+        try {
+        	//Execute the query to select the users that contain a username.
+            //ResultSet rs = getConnection().createStatement().executeQuery(query);
+            
+            //while(rs.next()) {
+            	//shared.add(getFileNameFromID(rs.getInt("fileID")));
+            //}
         }catch(Exception e) {
         	return null;
         }
