@@ -13,14 +13,19 @@ public class Master {
         // Create a server socket
         try (ServerSocket ss = new ServerSocket(port)) {
             // contact load balancer to declare server for use
+            System.out.println("Connecting to load balancer");
             String lbip = "localhost";
             int lbport =  1970;
             Socket lb = new Socket(lbip, lbport);
             DataOutputStream lbos = new DataOutputStream(lb.getOutputStream());
+            DataInputStream lbis = new DataInputStream(lb.getInputStream());
             lbos.writeByte(codes.SERVERSTARTREQUEST);
+            long time = lbis.readLong();
+            System.out.println("Connected to LB with time + "+time);
             lbos.writeUTF(ss.getInetAddress().getHostAddress());
             lbos.writeInt(ss.getLocalPort());
             lb.close();
+            System.out.println("Registered.");
             // daemon like thing
             while (true) {
             	System.out.println("Waiting for new connection");
