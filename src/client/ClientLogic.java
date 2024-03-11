@@ -230,13 +230,14 @@ public class ClientLogic {
     }
 
     //fileName is the name of the file which user wants to share 
-    public byte shareRequest(String fileName, String sharedUser, int idSharer){
+    public byte shareRequest(String fileName, String sharedUser){
     	try {
 	        out.writeByte(codes.SHAREREQUEST); //send request to server to start share request functionality 
 	        byte response = in.readByte();  //get response that server is now running the share request functionality 
 	
 	        if(response == codes.SHARERESPONSE) //valid response from server
 	        {
+							out.writeInt(id);
 	            out.writeUTF(fileName); //send file name so we can check if it exists
 	            byte doesFileExist = in.readByte();  //read from server to see if the file actually exists
 	            //if file doesn't exist we should return as we can't share something not in the system duh
@@ -254,16 +255,10 @@ public class ClientLogic {
 	                return codes.NOSUCHUSER; 
 	            }
 	
-	            out.writeInt(idSharer);
 	            byte serverResponse = in.readByte(); 
-	
-	            //byte response = in.readByte(); 
-	           // out.writeInt(idReceiver);  
-	
+
 	            //validity checks already done.
 	            return serverResponse; 
-	            //return codes.OK
-	            //maybe implement codes.SHARESUCCESS
 	        }
 	        else {
 	            return codes.ERR; //something happened not sure if this can actually get hit though 
@@ -275,7 +270,7 @@ public class ClientLogic {
 
     }
     
-    public byte unshareRequest(String fileName, String sharedUser, int idSharer){
+    public byte unshareRequest(String fileName, String sharedUser){
     	try {
 	        out.writeByte(codes.UNSHAREREQUEST); //send request to server to start share request functionality 
 	        byte response = in.readByte();  //get response that server is now running the share request functionality 
@@ -300,7 +295,7 @@ public class ClientLogic {
 	                return codes.NOSUCHUSER; 
 	            }
 	
-	            out.writeInt(idSharer);
+	            out.writeInt(id);
 	            byte serverResponse = in.readByte(); 
 	
 	            //byte response = in.readByte(); 
@@ -317,7 +312,7 @@ public class ClientLogic {
     	}
     }
 
-    public byte deleteRequest(String filePath, int userID){
+    public byte deleteRequest(String filePath){
     	try {
 	        out.writeByte(codes.DELETEREQUEST); //send request to server
 	
@@ -335,7 +330,7 @@ public class ClientLogic {
 	
 	            //check if the user owns it with USEREXISTS
 	
-	            out.writeInt(userID); 
+	            out.writeInt(id); 
 	
 	            byte doesUserExist = in.readByte(); 
 	            if(doesUserExist == codes.NOSUCHUSER)
@@ -352,7 +347,7 @@ public class ClientLogic {
     	}
     }
 
-    public ArrayList<Pair<String, String>> getAllFilesRequest(int userID)
+    public ArrayList<Pair<String, String>> getAllFilesRequest()
     {
     	ArrayList<Pair<String,String>> errorReturn = new ArrayList<Pair<String,String>>();
     	errorReturn.add(new Pair<String, String>("", "Error"));
@@ -364,7 +359,7 @@ public class ClientLogic {
 	        if(response == codes.GETALLFILESRESPONSE)
 	        {
 	            //PROBABLY SHOULD HAVE SOME SORT OF INSTANCE OF USERID TO ACTUALLY VALIDATE AGAINST OR THE GUI INPUTS THE USERID NOT THE USER THEMSELVES OR THEY COULD RETRIEVE OTHER PEOPLES FILES
-	            out.writeInt(userID); 
+	            out.writeInt(id); 
 	            byte doesUserExist = in.readByte(); 
 	            if(doesUserExist == codes.USEREXISTS)
 	            {
@@ -377,6 +372,47 @@ public class ClientLogic {
 	            	}
 	                //byte finalResponse = in.readByte(); 
 	                return allFiles; 
+	            }
+	            else
+	            {
+	                return errorReturn; //wrong user input somehow
+	            }
+	        }
+	        else
+	        {
+	            return errorReturn; 
+	        }
+    	} catch(IOException e) {
+    		e.printStackTrace();
+    		return errorReturn;
+    	}
+    }
+
+		public ArrayList<Pair<String, String>> getSharedFilesRequest()
+    {
+    	ArrayList<Pair<String,String>> errorReturn = new ArrayList<Pair<String,String>>();
+    	errorReturn.add(new Pair<String, String>("", "Error"));
+    	try {
+	        out.writeByte(codes.GETSHAREDFILESREQUEST); 
+	
+	        byte response = in.readByte();
+	
+	        if(response == codes.GETSHAREDFILESRESPONSE)
+	        {
+	            //PROBABLY SHOULD HAVE SOME SORT OF INSTANCE OF USERID TO ACTUALLY VALIDATE AGAINST OR THE GUI INPUTS THE USERID NOT THE USER THEMSELVES OR THEY COULD RETRIEVE OTHER PEOPLES FILES
+	            out.writeInt(id); 
+	            byte doesUserExist = in.readByte(); 
+	            if(doesUserExist == codes.USEREXISTS)
+	            {
+	            	short records = in.readShort();
+	            	ArrayList<Pair<String,String>> sharedFiles = new ArrayList<Pair<String,String>>();
+	            	for(int i = 0; i < records; i++) {
+	            		String file = in.readUTF();
+									String user = in.readUTF();
+									sharedFiles.add(new Pair<String, String>(file, user));
+	            	}
+	                //byte finalResponse = in.readByte(); 
+	                return sharedFiles; 
 	            }
 	            else
 	            {

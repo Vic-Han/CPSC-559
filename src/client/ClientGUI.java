@@ -12,6 +12,7 @@ import javafx.collections.ObservableList; import javafx.scene.control.ComboBox;
 import java.util.ArrayList;
 import java.util.Optional;
 
+import Utilities.Pair;
 import Utilities.codes;
 
 // run/compile within gui directory using
@@ -24,7 +25,7 @@ public class ClientGUI extends Application {
     private static ClientLogic clientLogic;
     private static String usrname;
     public static void main(String[] args) {
-        clientLogic = new ClientLogic("localhost",1969);
+        clientLogic = new ClientLogic("localhost",1969); 
         launch(args);
     }
 
@@ -86,25 +87,30 @@ public class ClientGUI extends Application {
         // UI components
         Button uploadButton = new Button("Upload File");
         Button downloadButton = new Button("Download File");
-        Button shareButton = new Button("Share File(s)");
+        Button shareButton = new Button("Share File");
+        Button unshareButton = new Button("Unshare File");
 
         // Event handlers
         uploadButton.setOnAction(e -> uploadFile(primaryStage));
         downloadButton.setOnAction(e -> showDownloadPage(primaryStage));
-        shareButton.setOnAction(e -> shareFiles(primaryStage));
+        shareButton.setOnAction(e -> showSharingPage(primaryStage));
+        unshareButton.setOnAction(e -> showUnsharingPage(primaryStage));
 
         // Layout
         VBox vbox = new VBox(10); // 10 pixels spacing between elements
         vbox.setPadding(new Insets(20)); // 20 pixels padding around the VBox
-        HBox buttonBox = new HBox(10);
-        buttonBox.getChildren().addAll(uploadButton, downloadButton);
+        HBox buttonBox1 = new HBox(10);
+        buttonBox1.getChildren().addAll(uploadButton, downloadButton);
+        HBox buttonBox2 = new HBox(10);
+        buttonBox2.getChildren().addAll(shareButton, unshareButton);
 
         Label titleLabel = new Label(usrname+"'s File Transfer App");
         titleLabel.setStyle("-fx-font-size: 24; -fx-font-weight: bold;");
 
-        vbox.getChildren().addAll(titleLabel, buttonBox, shareButton);
+        vbox.getChildren().addAll(titleLabel, buttonBox1, buttonBox2);
         vbox.setAlignment(javafx.geometry.Pos.CENTER);
-        buttonBox.setAlignment(javafx.geometry.Pos.CENTER);
+        buttonBox1.setAlignment(javafx.geometry.Pos.CENTER);
+        buttonBox2.setAlignment(javafx.geometry.Pos.CENTER);
 
         // Scene
         Scene scene = new Scene(new BorderPane(vbox), 400, 300);
@@ -131,7 +137,7 @@ public class ClientGUI extends Application {
         fileComboBox.getStyleClass().add("combo-box");
 
         // Populate the ComboBox with data from your ArrayList
-        ObservableList<String> fileOptions = FXCollections.observableArrayList(getAvailableFiles());
+        ObservableList<String> fileOptions = FXCollections.observableArrayList(getAllFiles());
         fileComboBox.setItems(fileOptions);
 
         Button downloadButton = new Button("Select Destination Folder");
@@ -141,6 +147,90 @@ public class ClientGUI extends Application {
 
         // Event handler
         downloadButton.setOnAction(e -> downloadFile(primaryStage, fileComboBox.getValue())); //fileField.getText()
+        
+        vbox.getChildren().addAll(titleLabel, fileComboBox, buttonBox);
+        vbox.setAlignment(javafx.geometry.Pos.CENTER);
+        buttonBox.setAlignment(javafx.geometry.Pos.CENTER);
+
+        // Scene
+        Scene scene = new Scene(new BorderPane(vbox), 300, 200);
+
+        // Apply 'dark mode' stylesheet
+        scene.getStylesheets().add(getClass().getResource("resources/dark-mode.css").toExternalForm());
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    private void showSharingPage(Stage primaryStage){
+        // Layout
+        VBox vbox = new VBox(10); // 10 pixels spacing between elements
+        vbox.setPadding(new Insets(20)); // 20 pixels padding around the VBox
+        // Place login and register buttons horizontally using HBox
+        HBox buttonBox = new HBox(10);
+
+        // UI components
+        Label titleLabel = new Label("File Transfer App");
+        titleLabel.setStyle("-fx-font-size: 24; -fx-font-weight: bold;");
+
+        ComboBox<String> fileComboBox = new ComboBox<>();
+        fileComboBox.setPromptText("Select File to Share");
+        fileComboBox.getStyleClass().add("combo-box");
+
+        // Populate the ComboBox with data from your ArrayList
+        ObservableList<String> fileOptions = FXCollections.observableArrayList(getOwnedFiles());
+        fileComboBox.setItems(fileOptions);
+
+        TextField shareField = new TextField();
+        shareField.setPromptText("Share with");
+        shareField.getStyleClass().add("text-field");
+
+        Button shareButton = new Button("Share");
+        shareButton.getStyleClass().add("button");
+
+        buttonBox.getChildren().addAll(shareButton);
+
+        // Event handler
+        shareButton.setOnAction(e -> shareFile(primaryStage, fileComboBox.getValue(), shareField.getText())); //fileField.getText()
+        
+        vbox.getChildren().addAll(titleLabel, fileComboBox, shareField, buttonBox);
+        vbox.setAlignment(javafx.geometry.Pos.CENTER);
+        buttonBox.setAlignment(javafx.geometry.Pos.CENTER);
+
+        // Scene
+        Scene scene = new Scene(new BorderPane(vbox), 300, 200);
+
+        // Apply 'dark mode' stylesheet
+        scene.getStylesheets().add(getClass().getResource("resources/dark-mode.css").toExternalForm());
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    private void showUnsharingPage(Stage primaryStage){
+        // Layout
+        VBox vbox = new VBox(10); // 10 pixels spacing between elements
+        vbox.setPadding(new Insets(20)); // 20 pixels padding around the VBox
+        // Place login and register buttons horizontally using HBox
+        HBox buttonBox = new HBox(10);
+
+        // UI components
+        Label titleLabel = new Label("File Transfer App");
+        titleLabel.setStyle("-fx-font-size: 24; -fx-font-weight: bold;");
+
+        ComboBox<String> fileComboBox = new ComboBox<>();
+        fileComboBox.setPromptText("Select File & User to Unshare");
+        fileComboBox.getStyleClass().add("combo-box");
+
+        // Populate the ComboBox with data from your ArrayList
+        ObservableList<String> fileOptions = FXCollections.observableArrayList(getSharedFiles());
+        fileComboBox.setItems(fileOptions);
+
+        Button shareButton = new Button("Unshare");
+        shareButton.getStyleClass().add("button");
+
+        buttonBox.getChildren().addAll(shareButton);
+
+        // Event handler
+        shareButton.setOnAction(e -> unshareFile(primaryStage, fileComboBox.getValue())); //fileField.getText()
         
         vbox.getChildren().addAll(titleLabel, fileComboBox, buttonBox);
         vbox.setAlignment(javafx.geometry.Pos.CENTER);
@@ -223,7 +313,10 @@ public class ClientGUI extends Application {
         directoryChooser.setTitle("Select Destination Directory");
         File selectedDirectory = directoryChooser.showDialog(primaryStage);
         String dest = selectedDirectory.getAbsolutePath();
+
+        if(fileName.endsWith(" (shared)")) fileName = fileName.substring(0, fileName.length() - 9);
         System.out.println(fileName + " -> " + dest);
+
         if (selectedDirectory != null) {
             try {
                 byte req = clientLogic.downloadRequest(dest, fileName);
@@ -235,6 +328,9 @@ public class ClientGUI extends Application {
                     case codes.DOWNLOADFAIL:
                         System.out.println("Failed download :(");
                         break;
+                    case codes.NOSUCHFILE:
+                        System.out.println(fileName + " does not exist");
+                        break;
                     default: // error
                         System.out.println("Something broke (download)");
                 }
@@ -245,33 +341,84 @@ public class ClientGUI extends Application {
         showMainPage();
     }
 
-    private void shareFiles(Stage primaryStage){
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Select File to Share");
-        File selectedFile = fileChooser.showOpenDialog(primaryStage);
-        if (selectedFile != null) {
-            try {
-                System.out.println("File selected: " + selectedFile.getName());
-                TextInputDialog dialog = new TextInputDialog();
-                dialog.setTitle("User Input");
-                dialog.setHeaderText("Please enter the username you would like to share this file with:");
-                dialog.setContentText("Username:");
-                // Show the dialog and wait for the user's response
-                Optional<String> result = dialog.showAndWait();
-                // Process the result
-                result.ifPresent(name -> {
-                    System.out.println("Share with: " + name);
-                });
-            } catch (Exception e) {
-                System.out.println("FAILED to select: " + selectedFile.getName());
+    private void shareFile(Stage primaryStage, String fileName, String shareUser){
+        try {
+            if(fileName.endsWith(" (shared)")) fileName = fileName.substring(0, fileName.length() - 9);
+            // TODO: allow users to share files that have been shared with them?
+            System.out.println("File selected: " + fileName + ", User selected: " + shareUser);
+            byte req = clientLogic.shareRequest(fileName, shareUser);
+
+            switch(req){
+                case codes.NOSUCHFILE:
+                    System.out.println(fileName + " does not exist");
+                    break;
+                case codes.NOSUCHUSER:
+                    System.out.println(shareUser + " does not exist");
+                    break;
+                case codes.SHARESUCCESS:
+                    System.out.println(fileName + " successfully shared with " + shareUser);
+                    break;
+                case codes.SHAREFAIL:
+                    System.out.println("Failed to share "+fileName+" with "+shareUser);
+                    break;
+                default: // error
+                    System.out.println("Something broke (sharing)");
             }
+        } catch (Exception e) {
+            System.out.println("FAILED to select: " + fileName);
         }
+        showMainPage();
     }
 
-    private ArrayList<String> getAvailableFiles(){
-        ArrayList<String> arr = new ArrayList<>();
-        arr.add("courses.txt"); // obviously change later
-        return arr;
+    private void unshareFile(Stage primaryStage, String selection){
+        String[] parts = selection.split(" -> ");
+        String fileName = parts[0], shareUser = parts[1];
+        try {
+            System.out.println("File selected: " + fileName + ", User selected: " + shareUser);
+            byte req = clientLogic.unshareRequest(fileName, shareUser);
+
+            switch(req){
+                case codes.NOSUCHFILE:
+                    System.out.println(fileName + " does not exist");
+                    break;
+                case codes.NOSUCHUSER:
+                    System.out.println(shareUser + " does not exist");
+                    break;
+                case codes.SHARESUCCESS:
+                    System.out.println(fileName + " successfully shared with " + shareUser);
+                    break;
+                case codes.SHAREFAIL:
+                    System.out.println("Failed to share "+fileName+" with "+shareUser);
+                    break;
+                default: // error
+                    System.out.println("Something broke (sharing)");
+            }
+        } catch (Exception e) {
+            System.out.println("FAILED to select: " + fileName);
+        }
+        showMainPage();
+    }
+
+    private ArrayList<String> getAllFiles(){
+        ArrayList<String> ret = new ArrayList<>();
+        ArrayList<Pair<String, String>> all = clientLogic.getAllFilesRequest();
+        for (Pair<String,String> pair : all)
+            ret.add(pair.second.equals("share") ? pair.first+" (shared)": pair.first);
+        return ret;
+    }
+
+    private ArrayList<String> getOwnedFiles(){
+        ArrayList<String> ret = new ArrayList<>();
+        ArrayList<Pair<String, String>> all = clientLogic.getAllFilesRequest();
+        for (Pair<String,String> pair : all) if(pair.second.equals("own")) ret.add(pair.first);
+        return ret;
+    }
+
+    private ArrayList<String> getSharedFiles(){
+        ArrayList<String> ret = new ArrayList<>();
+        ArrayList<Pair<String, String>> all = clientLogic.getSharedFilesRequest(); // filename, shareUser
+        for (Pair<String,String> pair : all) ret.add(pair.first + " -> " + pair.second);
+        return ret;
     }
 }
 

@@ -166,43 +166,23 @@ public class ProtocolHandler {
     public void handleShareRequest() {
         try {
             os.writeByte(codes.SHARERESPONSE); //write response to client to tell them we are starting to handle the share request 
+            
+            int userID = is.readInt(); 
             String filename = is.readUTF();
+            if(!MasterDatabase.isValidFile(filename,userID)){
+                os.writeByte(codes.NOSUCHFILE);
+                return; 
+            } else os.writeByte(codes.FILEEXISTS); 
 
-            //TODO:get file from server if it exists 
-            //byte doesFileExist = 
-            //if (file does not exist){
-                //os.writeByte(codes.NOSUCHFILE);
-                //return; 
-            //}
-            //else{ file must exist
-            os.writeByte(codes.FILEEXISTS); //file must exist so write OK
-            //}
-
-
-            //String owner = is.readUTF();
             String sharedTo = is.readUTF();
-
-            //TODO: do checks for if the user exists
-            //byte doesUserExist = 
-            //if (user does not exist){
-                //os.writeByte(codes.NOSUCHUSER);
-                //return; 
-            //}
-
-            os.writeByte(codes.USEREXISTS); 
-            int userID = is.readInt(); //should be valid if gui can check data base , if not we should do checks here on the files and such 
-            //Alternatively, we could get the userID of the sharer IF we instantiate it upon login and return it to the ClientLogic (client)
-
-
-            os.writeByte(codes.SHARESUCCESS); 
-            //boolean testValidity = true; 
-            //add share permission to database
-            // if(testValidity) {
-            //     os.writeByte(codes.SHARESUCCESS);
-            // } else {
-            //     os.writeByte(codes.SHAREFAIL);
-            //     //os.writeUTF("Error message");
-            // }
+            if(!MasterDatabase.isValidUser(sharedTo)){
+                os.writeByte(codes.NOSUCHUSER);
+                return; 
+            } else os.writeByte(codes.USEREXISTS); 
+            
+            boolean success = MasterDatabase.shareFile(filename, userID, sharedTo);
+            os.writeByte(success ? codes.SHARESUCCESS : codes.SHAREFAIL);
+            
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -300,6 +280,42 @@ public class ProtocolHandler {
 	            os.writeByte(codes.USEREXISTS); 
 	            os.writeShort(allFiles.size());
 	            allFiles.forEach((i) ->{
+		        	try {
+		        		os.writeUTF(i.first);
+						os.writeUTF(i.second);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+		        });
+	            //os.writeByte(codes.GETALLSUCCESS); //if successful 
+	            //if unsuccessful os.writeByte(codes.GETALLFAIL);
+	        //}
+        }catch(Exception e)
+        {
+            e.printStackTrace();
+            //os.writeByte(codes.GETALLFAIL);
+        }
+
+    }
+
+    // method that is called when the server recieves a request to see all files the user has shared with others
+    // should tell the client the file names and usernames of who the file(s) are shared with
+
+
+    public void handleSharedFilesRequest(){
+        try{
+	        os.writeByte(codes.GETSHAREDFILESRESPONSE);
+	
+	        int userID = is.readInt(); 
+	
+	        //check if userID is actually in system 
+	        ArrayList<Pair<String,String>> shared = MasterDatabase.getUserSharedFiles(userID);
+
+	        //TODO: Send list allFiles over socket connection
+	        //if(valid user id from caller (client)){
+	            os.writeByte(codes.USEREXISTS); 
+	            os.writeShort(shared.size());
+	            shared.forEach((i) ->{
 		        	try {
 		        		os.writeUTF(i.first);
 						os.writeUTF(i.second);
