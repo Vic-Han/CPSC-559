@@ -24,7 +24,8 @@ public class Master {
             System.out.println("Connected to LB with time + "+time);
             lbos.writeUTF(ss.getInetAddress().getHostAddress());
             lbos.writeInt(ss.getLocalPort());
-            lb.close();
+            LBConnectionHandler lbch = new LBConnectionHandler(lb);
+            lbch.start();
             System.out.println("Registered.");
             // daemon like thing
             while (true) {
