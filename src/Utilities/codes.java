@@ -20,6 +20,8 @@ public class codes {
     public static final byte GETALLFILESRESPONSE = 15;
     public static final byte FILEDATA = 16;
     public static final byte FILEDATAACK = 17;
+    public static final byte GETSHAREDFILESREQUEST = 18;
+    public static final byte GETSHAREDFILESRESPONSE = 19;
     public static final byte ACK = 52;
     public static final byte OK = 53;
     public static final byte ERR = 54;

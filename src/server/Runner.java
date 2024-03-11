@@ -66,6 +66,9 @@ public class Runner extends Thread {
           case(codes.GETALLFILESREQUEST):
         	  protocolHandler.handleAllFilesRequest();
         	  break;
+          case(codes.GETSHAREDFILESREQUEST):
+        	  protocolHandler.handleSharedFilesRequest();
+        	  break;
           default:
         	System.out.println("Unknown command given");
         	break;

@@ -1,0 +1,50 @@
+.root {
+  -fx-background-color: #333;
+}
+
+.label {
+  -fx-text-fill: white;
+}
+
+.button {
+  -fx-background-color: #555;
+  -fx-text-fill: white;
+  -fx-font-weight: bold;
+  -fx-font-size: 12px; /* Adjust the font size as needed */
+  -fx-padding: 10px 20px; /* Adjust the padding for height and width */
+}
+
+.button:hover {
+  -fx-background-color: #777;
+}
+
+.text-field {
+  -fx-background-color: #777;
+  -fx-border-color: #777;
+  -fx-border-width: 1px;
+  -fx-border-radius: 3px;
+  -fx-padding: 8px;
+  -fx-font-weight: bold;
+  -fx-text-fill: white;
+  -fx-prompt-text-fill: white;
+}
+
+.combo-box {
+  -fx-background-color: #555;
+  -fx-font-weight: bold;
+  -fx-font-size: 12px;
+  -fx-padding: 2px 6px;
+}
+
+.combo-box:hover {
+  -fx-background-color: #777;
+}
+
+.combo-box .list-cell {
+  -fx-background-color: #555; /* Dark background color for dropdown options */
+  -fx-text-fill: white; /* Text color for dropdown options */
+}
+
+.combo-box .list-cell:hover {
+  -fx-background-color: #777; /* Hover background color for dropdown options */
+}
