@@ -25,7 +25,7 @@ public class ClientGUI extends Application {
     private static ClientLogic clientLogic;
     private static String usrname;
     public static void main(String[] args) {
-        clientLogic = new ClientLogic("localhost",1969); 
+        clientLogic = new ClientLogic("localhost",1970); 
         launch(args);
     }
 

@@ -50,7 +50,7 @@ public class LoadBalancer {
         globalSocket.toSend = null;
         ArrayList<Triple<Socket, String, Integer>> toRemove = new ArrayList<Triple<Socket, String, Integer>>();
         replicas.forEach(s->{
-            try {
+            /*try {
             	
                 //ask socket for how busy it is
                 DataInputStream is = new DataInputStream(s.first.getInputStream()); 
@@ -59,18 +59,18 @@ public class LoadBalancer {
                 int busy = is.readShort();
                 //get either error because socket is dead or a busy value
                 //if less busy than current socket replace current socket 
-                
+                */
                 //for now just return first one if alive
                 if(globalSocket.toSend == null) {
                     globalSocket.toSend = s.first;
                     globalSocket.replicaIP = s.second;
                     globalSocket.replicaPort = s.third;
                 }
-            } catch (IOException e) {
+            /*} catch (IOException e) {
                 //socket is dead, remove from list
                 System.out.println("IO Exception on replica at "+s.first.getInetAddress().getHostAddress()+". Will remove from replicas");
                 toRemove.add(s);
-            }
+            }*/
         });
         toRemove.forEach(r->{
             replicas.remove(r);
