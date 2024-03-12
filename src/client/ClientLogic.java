@@ -72,6 +72,7 @@ public class ClientLogic {
     public int loginRequest(String username, String password) {
     	try {
     		out.writeByte(codes.LOGINREQUEST);
+			// in.readByte(); //get response from server
     		out.writeUTF(username);
     		out.writeUTF(password);//should be hashed
     		System.out.println("Sent Request");

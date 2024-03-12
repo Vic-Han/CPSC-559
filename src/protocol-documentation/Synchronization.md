@@ -1,3 +1,0 @@
-## Synchronizing registration
-
-## Synchronizing login

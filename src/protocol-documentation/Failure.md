@@ -1,14 +1,10 @@
-## Server Initiates transfer with another server
-
 
 ## Server dies in the middle of transaction
 - The client should have all their unsaved changes cached - all the write transactions they have made
 - The client will ask the load balancer for a new server
 - The load balancer will respond with another active replicas location
-
-
-## Client disconnects unexpectedly
-
+- The client will connect with the new server and push its changes onto the new server
+- After recieving the new changes the client server can continue to communicate as normal
 
 
 ## Load balancer is unable to connect with server.
