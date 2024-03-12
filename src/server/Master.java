@@ -2,6 +2,8 @@ package server;
 import java.io.*;
 import java.net.*;
 
+import Utilities.codes;
+
 // class responsible for load balancing and managing workers
 public class Master {
     public static void main(String a[]) throws IOException {
@@ -11,8 +13,6 @@ public class Master {
 
         // Create a server socket
         try (ServerSocket ss = new ServerSocket(port)) {
-<<<<<<< Updated upstream
-=======
             // contact load balancer to declare server for use
             System.out.println("Connecting to load balancer");
             String lbip = "localhost";
@@ -28,7 +28,6 @@ public class Master {
             LBConnectionHandler lbch = new LBConnectionHandler(lbis, lbos);
             lbch.start();
             System.out.println("Registered.");
->>>>>>> Stashed changes
             // daemon like thing
             while (true) {
             	System.out.println("Waiting for new connection MASTER");

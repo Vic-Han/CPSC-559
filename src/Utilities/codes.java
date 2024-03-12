@@ -48,5 +48,6 @@ public class codes {
     public static final byte GETALLFAIL = 120; 
     public static final byte PASSWORDVALID = 121; 
     public static final byte PASSWORDINVALID = 122; 
-    
+    public static final byte CLIENTROUTEREQUEST = 60;
+    public static final byte SERVERSTARTREQUEST = 61;
 }
