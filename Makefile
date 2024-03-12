@@ -9,12 +9,10 @@ CLASSPATH := $(BIN_DIR)
 CLIENT_FILES := $(wildcard $(SRC_DIR)/client/*.java)
 SERVER_FILES := $(wildcard $(SRC_DIR)/server/*.java)
 UTILS_FILES := $(wildcard $(SRC_DIR)/Utilities/*.java)
-BALANCE_FILES := $(wildcard $(SRC_DIR)/LoadBalancer/*.java)
 
 CLIENT_CLS := $(CLIENT_FILES:$(SRC_DIR)/client/%.java=$(BIN_DIR)/client/%.class)
 SERVER_CLS := $(SERVER_FILES:$(SRC_DIR)/server/%.java=$(BIN_DIR)/server/%.class)
 UTILS_CLS := $(UTILS_FILES:$(SRC_DIR)/Utilities/%.java=$(BIN_DIR)/Utilities/%.class)
-BALANCE_CLS := $(BALANCE_FILES:$(SRC_DIR)/LoadBalancer/%.java=$(BIN_DIR)/LoadBalancer/%.class)
 
 # Define the compiler, flags, and interpreter
 JAVAC := javac
@@ -22,7 +20,7 @@ JFLAGS := -d $(BIN_DIR)/ -cp $(SRC_DIR)/
 JAVA := java
 
 # Define the targets
-all: $(CLIENT_CLS) $(SERVER_CLS) $(UTILS_CLS) $(BALANCE_CLS)
+all: $(CLIENT_CLS) $(SERVER_CLS) $(UTILS_CLS)
 	@echo "Compilation complete."
 
 # Compile client files
@@ -36,19 +34,12 @@ $(SERVER_CLS): $(BIN_DIR)/server/%.class: $(SRC_DIR)/server/%.java
 # Compile Utilities files
 $(UTILS_CLS): $(BIN_DIR)/Utilities/%.class: $(SRC_DIR)/Utilities/%.java
 	$(JAVAC) $(JFLAGS) $<
-	
-# Compile LoadBalancer files
-$(BALANCE_CLS): $(BIN_DIR)/LoadBalancer/%.class: $(SRC_DIR)/LoadBalancer/%.java
-	$(JAVAC) $(JFLAGS) $<
 
 server_run: all
 	@$(JAVA) -cp $(CLASSPATH) --module-path $(LIB_DIR_SQLITE) server.Master
 
 client_run: all
 	@$(JAVA) -cp $(CLASSPATH) --module-path $(LIB_DIR_JAVAFX) --add-modules javafx.controls client.ClientGUI
-	
-balance_run: all
-	@$(JAVA) -cp $(CLASSPATH) LoadBalancer.LoadBalancer
 
 clean:
 	rm -rf $(BIN_DIR)/*.class
