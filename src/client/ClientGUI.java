@@ -1,5 +1,4 @@
 package client;
-
 import javafx.application.Application; import javafx.scene.Scene; import javafx.scene.control.Button;
 import javafx.scene.control.Label; import javafx.scene.image.Image; import javafx.geometry.Insets;
 import javafx.scene.layout.BorderPane; import javafx.scene.layout.VBox; import javafx.stage.DirectoryChooser;
@@ -245,7 +244,7 @@ public class ClientGUI extends Application {
         primaryStage.show();
     }
 
-    private void handleLogin(String username, String password) {
+    private void (String username, String password) {
         System.out.println("Username: " + username + "\tPassword: " + password);
         int req = clientLogic.loginRequest(username, password);
         
@@ -421,4 +420,3 @@ public class ClientGUI extends Application {
         return ret;
     }
 }
-

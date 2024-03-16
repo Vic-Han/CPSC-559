@@ -1,17 +1,72 @@
 package LoadBalancer;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.io.*;
 import java.net.*;
 import Utilities.*;
 
 
 public class LoadBalancer {
+    private List<String> serverAddresses; //private list of serverAddresses
+    private AtomicInteger currentIndex = new AtomicInteger(0); //atomic for thread safety 
+
+
+
+
+    //Basic constructor to ensure that we get all the server addresses here. This is now being initialized by LoadBalancerInit (which also initializes the HealthChecks to run at a set interval to ensure servers are up)
+    public LoadBalancer(List<String> initialServerAddresses)
+    {
+        serverAddresses.addAll(initialServerAddresses); 
+    }
+
+    public synchronized String getNextServer(){
+
+        if(serverAddresses.isEmpty())
+        {
+            throw new IllegalStateException("No servers are available.");
+        }
+        int index = currentIndex.getAndUpdate(i -> (i + 1) % serverAddresses.size()); 
+        return serverAddresses.get(index);
+    }
+
+    //synchronized as we can't have more than 1 thread trying to access the global var at the same time or we get RACE CONDITIONS
+    public synchronized void removeFailedServer(String serverAddress)
+    {
+        if(serverAddresses.contains(serverAddress))
+        {
+            serverAddresses.remove(serverAddress);
+            System.out.println("Server removed due to failure: " + serverAddress);
+        }
+        else
+        {
+            System.out.println("Attempted to remove a server that was not in the list: " + serverAddress);
+        }
+
+        //can also re-sync list if shared (but I don't think we share this so we should be good)
+    }
+
+    //synchronized as we can't have more than 1 thread trying to access the global var at the same time or we get RACE CONDITIONS
+    public synchronized void addRecoveredServer(String serverAddress)
+    {
+        //perform a check to ensure that this server isn't already in the serverlist so that our round robin algorithm actually works properly 
+        if (!serverAddresses.contains(serverAddress))
+        {
+            serverAddresses.add(serverAddress);
+            System.out.println("Server recovered and added: " + serverAddress);
+        }
+        else
+        {
+            //Do we want to log anything? 
+            System.out.println("Server already in the list: " + serverAddress); 
+        }
+    }
 
     protected static ArrayList<Triple<Socket, String, Integer>> replicas;
     public static void main(String[] args) throws IOException{
         int port = 1970; 
-        Socket s;
+        Socket replicaSocket;
         long time = System.currentTimeMillis();
         replicas = new ArrayList<Triple<Socket, String, Integer>>();
         System.out.println("Initiating Load Balancer. Time = "+time);
@@ -20,27 +75,35 @@ public class LoadBalancer {
             while (true) {
             	System.out.println("Waiting for new connection LOADBALANCER");
 
-                s = ss.accept(); // accept a new client connection
-                DataInputStream is = new DataInputStream(s.getInputStream());
-                DataOutputStream os = new DataOutputStream(s.getOutputStream());
-                byte systemType = is.readByte();
+                replicaSocket = ss.accept(); // accept a new client connection
+
+                DataInputStream is = new DataInputStream(replicaSocket.getInputStream()); //input stream
+                DataOutputStream os = new DataOutputStream(replicaSocket.getOutputStream()); //output stream
+                byte systemType = is.readByte(); //systemType is either Server Start Request (i.e., start a server), or a Client Route Request (i.e., route client to appropriate server via round robin)
+                //byte systemType = handleStartOnLogin(); 
                 if(systemType == Utilities.codes.SERVERSTARTREQUEST) {
                     System.out.println("New server request");
                     os.writeLong(time);
-                    String repip = is.readUTF(); //get hostname being used by server
-                    int repport = is.readInt(); //get port being used by server
-                    System.out.println("Host:port "+repip+":"+repport);
-                    Triple<Socket, String, Integer> toAdd = new Triple<Socket, String, Integer>(s, repip, repport);
+                    String replicaIP = is.readUTF(); //get hostname being used by server
+                    int replicaPort = is.readInt(); //get port being used by server
+                    System.out.println("Host:port "+replicaIP+":"+replicaPort);
+                    Triple<Socket, String, Integer> toAdd = new Triple<Socket, String, Integer>(replicaSocket, replicaIP, replicaPort);
                     replicas.add(toAdd);
                 } else if (systemType == Utilities.codes.CLIENTROUTEREQUEST) {
                 	System.out.println("Client routing request");
-                    routeClient(s);
-                }else{
-                    s.close();
+                    routeClient(replicaSocket);
                 }
+                // else{
+                //     s.close();
+                // }
                 //s.close();
             }
         }
+    }
+
+    private static byte handleStartOnLogin(){
+        return codes.SERVERSTARTREQUEST; 
+
     }
 
     private static class globalSocket {

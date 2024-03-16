@@ -24,46 +24,60 @@ public class ClientLogic {
 		byte id;
     //private  String host;
     //private  int port;	neither used? commented out for now
-    Socket socket; 
+    Socket serverSocket; 
     //private int userID;
 
-    //default constructor to assign null values 
-    // public ClientLogic(){
-    //     this.host = "";
-    //     this.port = -1; 
-    // }
-
     //constructor called when given host and port to instantiate variables associated
-    public ClientLogic(String host, int port)
+    public ClientLogic(String hostName, int portNumber) //for the load balancer server 
     {
-        //this.host = host; 
-        //this.port = port;  
-        try {
-        //Host string into useable IP address
-	    InetAddress address = InetAddress.getByName(host);
-	
-	    //Instantiate socket with given IP address and port number
-	    this.socket = new Socket(address, port);
-	
-	    //instantiate output/input streams
-	    this.out = new DataOutputStream(this.socket.getOutputStream());
-	    this.in = new DataInputStream(this.socket.getInputStream());
-        } catch (IOException e) {
-        	e.printStackTrace();
-        	this.socket = null;
-        	this.out = null;
-        	this.in = null;
-        }
+		String loadBalancerAddress = "127.0.0.1"; //TODO: change this later 
+		int loadBalancerPort = 1969; //replacing master with this as we don't need Master.Java anymore (it wont work distributed)
+
+		try 
+		{
+			System.out.println("Requesting Server Address");
+			Socket loadBalancerSocket = new Socket(loadBalancerAddress, loadBalancerPort);
+			DataInputStream loadBalancerIS = new DataInputStream(loadBalancerSocket.getInputStream());
+			String serverInfo = loadBalancerIS.readUTF();
+			loadBalancerSocket.close(); //close socket to LB Server
+
+			//break the string into hostName and portNumber 
+			String[]parts = serverInfo.split(":");
+			String serverAddress = parts[0]; //get server addr 
+			int serverPort = Integer.parseInt(parts[1]); //get server port 
+
+			//Connect to the actual server provided by the Load Balancer Server 
+			try
+			{
+				//Instantiate serverSocket with 
+				this.serverSocket = new Socket(serverAddress, serverPort);
+				this.out = new DataOutputStream(serverSocket.getOutputStream());
+				this.in = new DataInputStream(serverSocket.getInputStream()); 
+
+			}catch(IOException e)
+			{
+				System.out.println("Couldn't connect to the server provided by the load balancer " + e.getMessage());
+
+			}
+		}
+		catch(IOException e)
+		{
+			System.out.println("Couldn't connect to the load balancer server " + e.getMessage());
+			//e.printStackTrace();
+			this.serverSocket = null;
+			this.out = null;
+			this.in = null; 
+		}
     }
     
     public boolean isConnected() {
-    	return this.socket == null;
+    	return this.serverSocket == null;
     }
     
     public void stop() {
     	try {
     		out.writeByte(codes.QUIT);
-    		socket.close();
+    		serverSocket.close();
     	} catch(IOException e) {
     		e.printStackTrace();
     	}
