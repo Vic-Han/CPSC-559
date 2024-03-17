@@ -18,6 +18,7 @@ public class LoadBalancer {
     //Basic constructor to ensure that we get all the server addresses here. This is now being initialized by LoadBalancerInit (which also initializes the HealthChecks to run at a set interval to ensure servers are up)
     public LoadBalancer(List<String> initialServerAddresses)
     {
+        serverAddresses = new ArrayList<String>();
         serverAddresses.addAll(initialServerAddresses); 
     }
 
