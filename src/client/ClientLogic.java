@@ -31,7 +31,7 @@ public class ClientLogic {
     public ClientLogic(String hostName, int portNumber) //for the load balancer server 
     {
 		String loadBalancerAddress = "127.0.0.1"; //TODO: change this later 
-		int loadBalancerPort = 1969; //replacing master with this as we don't need Master.Java anymore (it wont work distributed)
+		int loadBalancerPort = 2001; //replacing master with this as we don't need Master.Java anymore (it wont work distributed)
 
 		try 
 		{
