@@ -50,4 +50,6 @@ public class codes {
     public static final byte PASSWORDINVALID = 122; 
     public static final byte CLIENTROUTEREQUEST = 60;
     public static final byte SERVERSTARTREQUEST = 61;
+    public static final byte SERVERSHAREFILEREQUEST = 123; 
+    public static final byte SERVERSHAREFILERESPONSE = 124; 
 }

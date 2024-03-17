@@ -48,19 +48,20 @@ public class ServerHealthCheck implements Runnable{
         //Split serverAddress into hostname and port 
         String[] parts = serverAddress.split(":"); 
         String host = parts[0]; //get the host (IP)
-        int port = Integer.parseInt(parts[1]); //get the port 
+        //int port = Integer.parseInt(parts[1]); //get the port 
+        int healthCheckPort = 1973;
 
         try (Socket socket = new Socket())
         {
             //connect with timeout to avoid hanging if server isn't active 
-            socket.connect(new InetSocketAddress(host, port), 5000); //timeout currently set to 5000 milisecond (5 Seconds)
+            socket.connect(new InetSocketAddress(host, healthCheckPort), 5000); //timeout currently set to 5000 milisecond (5 Seconds)
 
             //ping server 
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true); 
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out.println("PING"); //send ping string
             String response = in.readLine(); //get response 
-            return "PONG".equals(response); //if the server says PONG as a response we check and evaluate to set the bool 
+            return "OK".equals(response); //if the server says OK as a response we check and evaluate to set the bool 
 
 
 

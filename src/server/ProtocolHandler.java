@@ -3,6 +3,7 @@ package server;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
+import java.util.List;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -16,6 +17,11 @@ public class ProtocolHandler {
     DataInputStream is;
     DataOutputStream os;
     private final String PREPEND = "C:\\CPSC559Proj\\SERVERFILES\\";
+
+    //To notify load balancer server of download to propogate to other servers 
+    private int loadBalancerPort = 2001; 
+    private String loadBalancerAddress = "127.0.0.1";
+    private List<String> serversToShareTo; 
 
     public ProtocolHandler(DataOutputStream os, DataInputStream is) {
         this.os = os;
@@ -86,6 +92,8 @@ public class ProtocolHandler {
 	            fis.close();
 	            os.writeByte(codes.DOWNLOADSUCCESS); 
 	            System.out.println("Finished");
+                notifyLoadBalancerDownload(); //let the load balancer know 
+                
             }
             catch(NoSuchFileException f)
             {
@@ -95,6 +103,13 @@ public class ProtocolHandler {
             //os.writeByte(codes.ERR); 
             e.printStackTrace();
         }
+    }
+
+    private void notifyLoadBalancerDownload()
+    {
+        ServerActionNotifier notifier = new ServerActionNotifier();
+        serversToShareTo = notifier.notifyLoadBalancerDownload(loadBalancerAddress, loadBalancerPort);
+
     }
 
     // method that is called when the server recieves a request to login
