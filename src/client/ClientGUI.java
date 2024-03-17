@@ -141,12 +141,15 @@ public class ClientGUI extends Application {
         fileComboBox.setItems(fileOptions);
 
         Button downloadButton = new Button("Select Destination Folder");
+        Button backButton = new Button("Back");
         downloadButton.getStyleClass().add("button");
+        backButton.getStyleClass().add("button");
 
-        buttonBox.getChildren().addAll(downloadButton);
+        buttonBox.getChildren().addAll(backButton, downloadButton);
 
         // Event handler
         downloadButton.setOnAction(e -> downloadFile(primaryStage, fileComboBox.getValue())); //fileField.getText()
+        backButton.setOnAction(e -> showMainPage());
         
         vbox.getChildren().addAll(titleLabel, fileComboBox, buttonBox);
         vbox.setAlignment(javafx.geometry.Pos.CENTER);
@@ -185,12 +188,16 @@ public class ClientGUI extends Application {
         shareField.getStyleClass().add("text-field");
 
         Button shareButton = new Button("Share");
+        Button backButton = new Button("Back");
         shareButton.getStyleClass().add("button");
-
-        buttonBox.getChildren().addAll(shareButton);
+        backButton.getStyleClass().add("button");
+        
+        
+        buttonBox.getChildren().addAll(backButton, shareButton);
 
         // Event handler
         shareButton.setOnAction(e -> shareFile(primaryStage, fileComboBox.getValue(), shareField.getText())); //fileField.getText()
+        backButton.setOnAction(e -> showMainPage());
         
         vbox.getChildren().addAll(titleLabel, fileComboBox, shareField, buttonBox);
         vbox.setAlignment(javafx.geometry.Pos.CENTER);
@@ -225,12 +232,15 @@ public class ClientGUI extends Application {
         fileComboBox.setItems(fileOptions);
 
         Button shareButton = new Button("Unshare");
+        Button backButton = new Button("Back");
         shareButton.getStyleClass().add("button");
+        backButton.getStyleClass().add("button");
 
-        buttonBox.getChildren().addAll(shareButton);
+        buttonBox.getChildren().addAll(backButton, shareButton);
 
         // Event handler
         shareButton.setOnAction(e -> unshareFile(primaryStage, fileComboBox.getValue())); //fileField.getText()
+        backButton.setOnAction(e -> showMainPage());
         
         vbox.getChildren().addAll(titleLabel, fileComboBox, buttonBox);
         vbox.setAlignment(javafx.geometry.Pos.CENTER);

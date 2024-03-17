@@ -8,7 +8,7 @@ import Utilities.Pair;
 
 public class MasterDatabase {
 
-    static String url = "jdbc:sqlite:bin/server/database/server.db"; // added bin to account for new makefile
+    static String url = "jdbc:sqlite:server/database/server.db"; // added bin to account for new makefile
     private static Connection conn = null;
     
     /**

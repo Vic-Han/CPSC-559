@@ -14,7 +14,7 @@ public class Master {
         try (ServerSocket ss = new ServerSocket(port)) {
             // contact load balancer to declare server for use
             System.out.println("Connecting to load balancer");
-            String lbip = "162.157.110.232";
+            String lbip = "localhost";
             int lbport =  1970;
             Socket lb = new Socket(lbip, lbport);
             DataOutputStream lbos = new DataOutputStream(lb.getOutputStream());
@@ -22,7 +22,7 @@ public class Master {
             lbos.writeByte(codes.SERVERSTARTREQUEST);
             long time = lbis.readLong();
             System.out.println("Connected to LB with time + "+time);
-            lbos.writeUTF("104.205.0.115");//HARDCODED FOR NOW - USE CLI
+            lbos.writeUTF("localhost");//HARDCODED FOR NOW - USE CLI
             lbos.writeInt(ss.getLocalPort());
             //LBConnectionHandler lbch = new LBConnectionHandler(lb);
             //lbch.start();
