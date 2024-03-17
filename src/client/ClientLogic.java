@@ -45,6 +45,7 @@ public class ClientLogic {
 			String[]parts = serverInfo.split(":");
 			String serverAddress = parts[0]; //get server addr 
 			int serverPort = Integer.parseInt(parts[1]); //get server port 
+			System.out.println("Attempting to Connect to IP: "+serverAddress+" Port: "+serverPort);
 
 			//Connect to the actual server provided by the Load Balancer Server 
 			try

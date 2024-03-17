@@ -118,7 +118,7 @@ public class ClientGUI extends Application {
         // Apply 'dark mode' stylesheet
         scene.getStylesheets().add(getClass().getResource("resources/dark-mode.css").toExternalForm());
         primaryStage.setScene(scene);
-        primaryStage.show();
+        primaryStage.show(); 
     }
 
     private void showDownloadPage(Stage primaryStage){

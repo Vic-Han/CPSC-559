@@ -76,6 +76,7 @@ public class MasterDatabase {
             int fileID = rs.getInt("fileID");
             return fileID;
     	}catch(Exception e) {
+    		System.out.println("MasterDatabase: Error getFileID, "+ e.getMessage());
     		return -1;
     	}
     }
@@ -100,7 +101,7 @@ public class MasterDatabase {
             int fileID = rs.getInt("userID");
             return fileID;
     	}catch(Exception e) {
-    		e.printStackTrace();
+    		System.out.println("MasterDatabase: Error getting user ID from name, "+ e.getMessage());
     		return -1;
     	}
     }
@@ -145,7 +146,7 @@ public class MasterDatabase {
             int userCount = rs.getInt("userCount");
             return userCount > 0;
     	}catch(Exception e) {
-    		e.printStackTrace();
+    		System.out.println("MasterDatabase: Error getting valid user "+ e.getMessage());
     		return false;
     	}
     }
@@ -171,7 +172,7 @@ public class MasterDatabase {
             int fileCount = rs.getInt("fileCount");
             return fileCount > 0;
     	}catch(Exception e) {
-    		e.printStackTrace();
+    		System.out.println("MasterDatabase: Error testing valid file, "+ e.getMessage());
     		return false;
     	}
     }
@@ -197,7 +198,8 @@ public class MasterDatabase {
             //Return the UserID of the inserted user.
             return getUserID(username);
         }catch(Exception e) {
-        	e.printStackTrace();;
+        	//e.printStackTrace();;
+        	System.out.println("MasterDatabase: Error Uploading, "+ e.getMessage());
             return -1;
         }
 
