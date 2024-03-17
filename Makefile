@@ -42,13 +42,13 @@ $(BALANCE_CLS): $(BIN_DIR)/LoadBalancer/%.class: $(SRC_DIR)/LoadBalancer/%.java
 	$(JAVAC) $(JFLAGS) $<
 
 server_run: all
-	@$(JAVA) -cp $(CLASSPATH) --module-path $(LIB_DIR_SQLITE) server.Master
+	@$(JAVA) -cp $(CLASSPATH) --module-path $(LIB_DIR_SQLITE) server.Server
 
 client_run: all
 	@$(JAVA) -cp $(CLASSPATH) --module-path $(LIB_DIR_JAVAFX) --add-modules javafx.controls client.ClientGUI
 	
 balance_run: all
-	@$(JAVA) -cp $(CLASSPATH) LoadBalancer.LoadBalancer
+	@$(JAVA) -cp $(CLASSPATH) LoadBalancer.LoadBalancerInit
 
 clean:
 	rm -rf $(BIN_DIR)/*.class
