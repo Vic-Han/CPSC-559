@@ -11,9 +11,10 @@ public class LoadBalancerInit {
 
         //Need to have the server address list available for this
         List<String> serverAddresses = Arrays.asList(
-            "127.0.0.1:1971", 
-            "127.0.0.1:1972",
-            "127.0.0.1:1973"
+            "162.157.110.232:1972",
+                 "104.205.0.115:1972"
+            //"SOME IP ADDRESS:1972", 
+            //"ANOTHER UNIQUE IP :1972"
         );
 
         

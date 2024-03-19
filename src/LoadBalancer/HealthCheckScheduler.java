@@ -18,8 +18,8 @@ public class HealthCheckScheduler {
     public void startHealthCheck(List<String> serverAddresses){
         serverAddresses.forEach(serverAddress -> {
             ServerHealthCheck healthCheck = new ServerHealthCheck(serverAddress, loadBalancer);
-            //Currently set to run every 30 seconds (supposedly 10 to 30 is the best range so we may need to lower this if we find synchronization isn't happening properly)
-            scheduler.scheduleAtFixedRate(healthCheck, 0, 30, TimeUnit.SECONDS); 
+            //Currently set to run every 10 seconds (supposedly 10 to 30 is the best range so we may need to lower this if we find synchronization isn't happening properly)
+            scheduler.scheduleAtFixedRate(healthCheck, 0, 10, TimeUnit.SECONDS); 
         });
 
     }

@@ -44,12 +44,12 @@ public class ServerHealthCheck implements Runnable{
 
     private boolean checkServerHealth(String serverAddress) //server address can be a string in the format: 127.0.0.1:6969 and just split it (saves stress of using Triple data struct)
     {
-
+        //main serverice port: 1972 -> 172.0.0.1:1972 SERVER ADDR ; 172.0.0.1:1973 
         //Split serverAddress into hostname and port 
         String[] parts = serverAddress.split(":"); 
         String host = parts[0]; //get the host (IP)
         //int port = Integer.parseInt(parts[1]); //get the port 
-        int healthCheckPort = 1973;
+        int healthCheckPort = 1973; //TODO: LEAVE THIS
 
         try (Socket socket = new Socket())
         {

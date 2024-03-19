@@ -56,6 +56,7 @@ public class ProtocolHandler {
             }
             fos.close();
             MasterDatabase.addFile(fileName, userID);
+            //notifyLoadBalancerDownload(); //let the load balancer know 
             os.writeByte(codes.UPLOADSUCCESS);
         } catch(IOException e) {
             e.printStackTrace();
@@ -92,8 +93,7 @@ public class ProtocolHandler {
 	            fis.close();
 	            os.writeByte(codes.DOWNLOADSUCCESS); 
 	            System.out.println("Finished");
-                notifyLoadBalancerDownload(); //let the load balancer know 
-                
+
             }
             catch(NoSuchFileException f)
             {
