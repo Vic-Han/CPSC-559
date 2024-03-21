@@ -236,7 +236,7 @@ public class ProtocolHandler {
         int userID = is.readInt(); //should be valid if gui can check data base , if not we should do checks here on the files and such 
         //Alternatively, we could get the userID of the sharer IF we instantiate it upon login and return it to the ClientLogic (client)
 
-
+        MasterDatabase.unshareFile(filename, userID, sharedTo);
         os.writeByte(codes.UNSHARESUCCESS); 
         //boolean testValidity = true; 
         //add share permission to database

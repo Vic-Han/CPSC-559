@@ -76,6 +76,7 @@ public class MasterDatabase {
             int fileID = rs.getInt("fileID");
             return fileID;
     	}catch(Exception e) {
+    		System.out.println("MasterDatabase: Error getFileID, "+ e.getMessage());
     		return -1;
     	}
     }
@@ -100,7 +101,7 @@ public class MasterDatabase {
             int fileID = rs.getInt("userID");
             return fileID;
     	}catch(Exception e) {
-    		e.printStackTrace();
+    		System.out.println("MasterDatabase: Error getting user ID from name, "+ e.getMessage());
     		return -1;
     	}
     }
@@ -119,6 +120,25 @@ public class MasterDatabase {
             
             rs.next();
             return rs.getString("fileName");
+        }catch(Exception e) {
+        	return null;
+        }
+    }
+    
+    /**
+     * Given a userID return the name of the file at that ID
+     * @param userID - the ID of the file to return the name for
+     * @return username - the Name of the file with the corresponding ID
+     */
+    private static String getUsernameFromID(int userID) {
+    	String query = "SELECT * FROM users WHERE userID = \'" + userID +"\'";
+    	
+        try {
+        	//Execute the query to select the users that contain a username.
+            ResultSet rs = getConnection().createStatement().executeQuery(query);
+            
+            rs.next();
+            return rs.getString("username");
         }catch(Exception e) {
         	return null;
         }
@@ -145,7 +165,7 @@ public class MasterDatabase {
             int userCount = rs.getInt("userCount");
             return userCount > 0;
     	}catch(Exception e) {
-    		e.printStackTrace();
+    		//System.out.println("MasterDatabase: Error getting valid user "+ e.getMessage());
     		return false;
     	}
     }
@@ -171,7 +191,7 @@ public class MasterDatabase {
             int fileCount = rs.getInt("fileCount");
             return fileCount > 0;
     	}catch(Exception e) {
-    		e.printStackTrace();
+    		//System.out.println("MasterDatabase: Error testing valid file, "+ e.getMessage());
     		return false;
     	}
     }
@@ -197,7 +217,8 @@ public class MasterDatabase {
             //Return the UserID of the inserted user.
             return getUserID(username);
         }catch(Exception e) {
-        	e.printStackTrace();;
+        	//e.printStackTrace();;
+        	System.out.println("MasterDatabase: Error Uploading, "+ e.getMessage());
             return -1;
         }
 
@@ -231,6 +252,7 @@ public class MasterDatabase {
 	         }
 
         }catch(Exception e) {
+        	System.out.println("MasterDatabase: Error Logging In; " + e.getMessage());
             return -1;
         }
 
@@ -253,6 +275,7 @@ public class MasterDatabase {
             
             statement.executeUpdate(updateQuery);
     	}catch(Exception e) {
+    		System.out.println("MasterDatabase: Error Adding File; " + e.getMessage());
     		return false;
     	}
     	
@@ -280,6 +303,7 @@ public class MasterDatabase {
             statement.executeUpdate(deleteShareQuery);
             
     	}catch(Exception e) {
+    		System.out.println("MasterDatabase: Error Deleting File; " + e.getMessage());
     		return false;
     	}
 
@@ -306,7 +330,7 @@ public class MasterDatabase {
             statement.executeUpdate(updateQuery);
             
     	}catch(Exception e) {
-    		e.printStackTrace();
+    		System.out.println("MasterDatabase: Error Sharing; " + e.getMessage());
     		return false;
     	}
     	
@@ -320,10 +344,11 @@ public class MasterDatabase {
     * @param sharedUser - The userID of the person to take away the share from
     * @return True if successful, False otherwise.
     */
-    public static boolean unshareFile(String fileName, int owner, int sharedUser){
-    	String deleteQuery = "DELETE FROM shared WHERE fileID =\'"+getFileID(fileName, owner)+"\' AND sharedWith = \'"+sharedUser+"\'";
+    public static boolean unshareFile(String fileName, int owner, String sharedUser){
+    	String deleteQuery = "DELETE FROM shared WHERE fileID =\'"+getFileID(fileName, owner)+"\' AND sharedWith = \'"+getUserID(sharedUser)+"\'";
     	
     	try {
+    		System.out.println("");
     		//Execute the statement to add the file.
         	Connection conn = getConnection();
             Statement statement = conn.createStatement();
@@ -332,6 +357,7 @@ public class MasterDatabase {
             statement.executeUpdate(deleteQuery);
             
     	}catch(Exception e) {
+    		System.out.println("MasterDatabase: Error Unsharing; " + e.getMessage());
     		return false;
     	}
         return true;
@@ -386,19 +412,19 @@ public class MasterDatabase {
     /**
      * 
      * @param userID - The ID of the user to check shared files for
-     * @return 
+     * @return Array list of pairs where pair.first is the file name and pair.second is the user it is shared with
      */
     public static ArrayList<Pair<String,String>> getUserSharedFiles(int userID){
     	ArrayList<Pair<String,String>> shared = new ArrayList<Pair<String,String>>();
-    	// String query = "SELECT fileID, sharedWith FROM shared WHERE fileID IN (SELECT fileID FROM files WHERE owner = \'" + userID +"\')";
+    	String query = "SELECT fileID, sharedWith FROM shared WHERE fileID IN (SELECT fileID FROM files WHERE owner = " + userID +")";
     	// owen help sql's hard
         try {
         	//Execute the query to select the users that contain a username.
-            //ResultSet rs = getConnection().createStatement().executeQuery(query);
+            ResultSet rs = getConnection().createStatement().executeQuery(query);
             
-            //while(rs.next()) {
-            	//shared.add(getFileNameFromID(rs.getInt("fileID")));
-            //}
+            while(rs.next()) {
+            	shared.add(new Pair<String,String>(getFileNameFromID(rs.getInt("fileID")), getUsernameFromID(rs.getInt("sharedWith"))));
+            }
         }catch(Exception e) {
         	return null;
         }
