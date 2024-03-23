@@ -10,7 +10,12 @@ import Utilities.*;
 
 public class LoadBalancer {
     private List<String> serverAddresses; //private list of serverAddresses
-    private AtomicInteger currentIndex = new AtomicInteger(0); //atomic for thread safety 
+    private int leaderPort = -1; //keep track of current leaders port (default/uninitialized = -1)
+
+    //For notificaiton management (i.e., new leader, file propagation, etc.)
+    private final int managementPort = 1984; 
+    private LeaderNotifier leaderNotifier = new LeaderNotifier();
+
 
 
 
@@ -18,18 +23,134 @@ public class LoadBalancer {
     //Basic constructor to ensure that we get all the server addresses here. This is now being initialized by LoadBalancerInit (which also initializes the HealthChecks to run at a set interval to ensure servers are up)
     public LoadBalancer(List<String> initialServerAddresses)
     {
-        serverAddresses = new ArrayList<String>();
-        serverAddresses.addAll(initialServerAddresses); 
+        serverAddresses = new ArrayList<>(initialServerAddresses);
+
+        //Set initial leader (upon program initializaiton) as first server in our server list 
+        if(!serverAddresses.isEmpty())
+        {
+            updateLeaderPort(serverAddresses.get(0));
+        }
     }
 
-    public synchronized String getNextServer(){
-
-        if(serverAddresses.isEmpty())
+    public synchronized void checkLeaderHealth()
+    {
+        String leaderAddress = getLeaderAddress(); 
+        if(leaderAddress != null && !checkServerHealth(leaderAddress))
         {
-            throw new IllegalStateException("No servers are available.");
+            handleLeaderFailure(leaderAddress); 
         }
-        int index = currentIndex.getAndUpdate(i -> (i + 1) % serverAddresses.size()); 
-        return serverAddresses.get(index);
+    }
+
+    private boolean checkServerHealth(String leaderAddress)
+    {
+        return false; 
+    }
+
+    public synchronized void handleLeaderFailure(String failedLeaderAddress)
+    {
+        String newLeaderAddress = determineNewLeader(failedLeaderAddress); //removes failed leader from serverAddresses list and gets the next in line
+        leaderNotifier.notifyServersOfNewLeader(newLeaderAddress, serverAddresses);
+    }
+
+    // public synchronized void handleLeaderFailure(String failedLeaderAddress)
+    // {
+    //     //Remove the failed leader 
+    //     serverAddresses.remove(failedLeaderAddress); 
+
+    //     //Elect a new leader 
+    //     String newLeaderAddress = !serverAddresses.isEmpty() ? serverAddresses.get(0) : null;
+
+    //     if(newLeaderAddress != null)
+    //     {
+    //         //Notify all servers about the new leader via LeaderNotifier service 
+    //         leaderNotifier.notifyServersOfNewLeader(newLeaderAddress, serverAddresses);
+
+
+    //         //TODO: CAN ALSO initiate file propagation (not sure if we want to do it here)
+    //         //this can be callback or separate method call to initiate file sync from new leader 
+
+    //         propagateFilesToAllServers(newLeaderAddress);
+    //     }
+
+    //     //case where no more servers after leader dies
+    //     if(serverAddresses.isEmpty())
+    //     {
+    //         System.err.println("Critical Failure; Leader died and no other servers exist"); 
+    //     }
+    // }
+
+    private String determineNewLeader(String failedLeaderAddress)
+    {
+        //Remove the failed leader 
+        serverAddresses.remove(failedLeaderAddress); 
+
+        //Elect a new leader 
+        return !serverAddresses.isEmpty() ? serverAddresses.get(0) : null;
+
+    }
+
+    private void propagateFilesToAllServers(String leaderAddress)
+    {
+
+    }
+
+    // Synchronized method to update the leader's port based on the address (Prevents multiple thread access to shared resource(s))
+    public synchronized void updateLeaderPort(String leaderAddress)
+    {
+        String[] parts = leaderAddress.split(":"); //split it from IP:Port into string array 
+        if(parts.length > 1){
+            try{
+                //this.leaderAddress =leaderAddress; //set the leader address (format: IP:Port)
+                this.leaderPort = Integer.parseInt(parts[1]); //IP:Port format
+                
+            }catch(NumberFormatException e)
+            {
+                System.err.println("Error parsing leader port: " + e.getMessage());
+                this.leaderPort = -1; //set to negative as it obviously isn't a port and is easy to handle if we need 
+            }
+        }
+    }
+
+    // Synchronized method to get the current leader's port (Prevents multiple thread access to shared resource(s))
+    public synchronized int getLeaderPort()
+    {
+        return leaderPort;
+    }
+
+    // Synchronized method to get the current leader's full address (Prevents multiple thread access to shared resource(s))
+    public synchronized String getLeaderAddress()
+    {
+        if(!serverAddresses.isEmpty())
+        {
+            return serverAddresses.get(0); //first in the list should always be the leader (changeLeader() ensures that list order is maintained properly)
+        }
+        return null; //TODO: either we return NULL or we handle no servers here
+    }
+
+    // Synchronized method to change the leader (Prevents multiple thread access to shared resource(s))
+    public synchronized void changeLeader(String newLeaderAddress)
+    {
+        serverAddresses.remove(newLeaderAddress);//remove from random placement in the list so we can put it at the front as the first should always be the leader
+        serverAddresses.add(0, newLeaderAddress);
+        updateLeaderPort(newLeaderAddress);
+    }
+
+
+
+    // public synchronized String getNextServer(){
+
+    //     if(serverAddresses.isEmpty())
+    //     {
+    //         throw new IllegalStateException("No servers are available.");
+    //     }
+    //     int index = currentIndex.getAndUpdate(i -> (i + 1) % serverAddresses.size()); 
+    //     return serverAddresses.get(index);
+    // }
+
+    //Method to get list of active servers 
+    public synchronized List<String> getActiveServers(){
+        // Returns a new ArrayList to avoid modification of the original list outside this class
+        return new ArrayList<>(serverAddresses);
     }
 
     //synchronized as we can't have more than 1 thread trying to access the global var at the same time or we get RACE CONDITIONS

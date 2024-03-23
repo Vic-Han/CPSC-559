@@ -10,10 +10,13 @@ import Utilities.codes;
  */
 
 public class Runner extends Thread {
+  private Socket s;
+  private ServerActionNotifier notifier;
 
 // Constructor
-  public Runner(Socket s) {
+  public Runner(Socket s, ServerActionNotifier notifier) {
     this.s = s;
+    this.notifier = notifier; 
   }
 
   public void run() {
@@ -30,7 +33,7 @@ public class Runner extends Thread {
       is = new DataInputStream(this.s.getInputStream());
       os = new DataOutputStream(this.s.getOutputStream());
       
-      ProtocolHandler protocolHandler = new ProtocolHandler(os, is);
+      ProtocolHandler protocolHandler = new ProtocolHandler(os, is, notifier);
       System.out.println("streams open");
       while(true) {
     	System.out.println("Waiting for request");
@@ -83,6 +86,5 @@ public class Runner extends Thread {
     }
   }
 
-private Socket s;
 
 }

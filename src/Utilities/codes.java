@@ -52,4 +52,8 @@ public class codes {
     public static final byte SERVERSTARTREQUEST = 61;
     public static final byte SERVERSHAREFILEREQUEST = 123; 
     public static final byte SERVERSHAREFILERESPONSE = 124; 
+    public static final byte GETACTIVESERVERS = 125; 
+    public static final byte REQUESTACTIVESERVERS = 126; 
+    public static final byte REQUESTLEADERDETAILS = 127; 
+    public static final byte NEWLEADERNOTIFICATION = 55;
 }

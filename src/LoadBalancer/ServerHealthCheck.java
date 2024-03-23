@@ -14,11 +14,13 @@ import java.net.Socket;
 public class ServerHealthCheck implements Runnable{
     private String serverAddress; //the address of the server to ping/check
     private LoadBalancer loadBalancer; //instance of the load balancer so we can actually remove failed servers from the current list and such
+    private boolean isLeaderCheck; //differentiate leader checks vs regular checks
 
-    public ServerHealthCheck(String serverAddress, LoadBalancer loadBalancer)
+    public ServerHealthCheck(String serverAddress, LoadBalancer loadBalancer, boolean isLeaderCheck)
     {
         this.serverAddress = serverAddress; 
         this.loadBalancer = loadBalancer;
+        this.isLeaderCheck = isLeaderCheck; 
     }
 
     @Override
@@ -27,14 +29,35 @@ public class ServerHealthCheck implements Runnable{
         //Health check logic here (connect to socket, ping server, get response, react)
         try{
             boolean isServerUp = checkServerHealth(serverAddress);
-            if(!isServerUp){ //if the server isn't up then we should remove it from the list of active (up) servers
-                loadBalancer.removeFailedServer(serverAddress); 
+            if (!isServerUp)
+            {
+                if(isLeaderCheck)
+                {
+                    //TODO: implement special handling for leader failure 
+                    loadBalancer.handleLeaderFailure(serverAddress);
+                }
+                else{
+                    loadBalancer.removeFailedServer(serverAddress);
+                }
             }
-            else{//otherwise, it didn't fail so thus it should be in the server list of active servers (which we will check if already in list in loadBalancer)
+            else{
                 loadBalancer.addRecoveredServer(serverAddress);
             }
+
+
+
+
+            // if(checkServerHealth()){ //if the server isn't up then we should remove it from the list of active (up) servers
+            //     loadBalancer.removeFailedServer(serverAddress); 
+            // }
+            // else{//otherwise, it didn't fail so thus it should be in the server list of active servers (which we will check if already in list in loadBalancer)
+            //     loadBalancer.addRecoveredServer(serverAddress);
+            // }
         }catch(Exception e){
             e.printStackTrace(); //probably return a better error code later once I know how to handle this better 
+            if(isLeaderCheck){
+            //TODO: implement logging or leader-specific failure logic 
+            }
             loadBalancer.removeFailedServer(serverAddress); //if we get an exception we should still remove it as it had to have failed to throw this
         }
 
@@ -46,8 +69,8 @@ public class ServerHealthCheck implements Runnable{
     {
         //main serverice port: 1972 -> 172.0.0.1:1972 SERVER ADDR ; 172.0.0.1:1973 
         //Split serverAddress into hostname and port 
-        String[] parts = serverAddress.split(":"); 
-        String host = parts[0]; //get the host (IP)
+        String host = serverAddress.split(":")[0]; 
+        //String host = parts[0]; //get the host (IP)
         //int port = Integer.parseInt(parts[1]); //get the port 
         int healthCheckPort = 1973; //TODO: LEAVE THIS
 

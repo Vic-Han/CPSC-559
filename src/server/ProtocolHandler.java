@@ -1,6 +1,7 @@
 package server;
 
 import java.io.IOException;
+import java.net.Socket;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,16 +17,19 @@ import Utilities.*;
 public class ProtocolHandler {
     DataInputStream is;
     DataOutputStream os;
+    ServerActionNotifier notifier; 
     private final String PREPEND = "C:\\CPSC559Proj\\SERVERFILES\\";
 
     //To notify load balancer server of download to propogate to other servers 
     private int loadBalancerPort = 2001; 
     private String loadBalancerAddress = "127.0.0.1";
     private List<String> serversToShareTo; 
+    private List<String> activeServers; 
 
-    public ProtocolHandler(DataOutputStream os, DataInputStream is) {
+    public ProtocolHandler(DataOutputStream os, DataInputStream is, ServerActionNotifier notifier) {
         this.os = os;
         this.is = is;
+        this.notifier = notifier;
     }
 
     // method that is called when the server recieves a request to upload a file
@@ -34,6 +38,30 @@ public class ProtocolHandler {
     // private void handleUploadRequest(String fileName, int userID, String ClientIP, int ClientPort) {
     	
     // }
+
+
+    //START OF ELECTION RELATED CODE
+    private void requestActiveServers()
+    {
+        //ServerActionNotifier notifier = new ServerActionNotifier(); //Create instance of ServerActionNotifier so that we can communicate with LoadBalancerServer.java to use LoadBalancer.java to get the currently active Servers
+        activeServers.clear(); //clear to ensure that it is current and isn't getting messed up in any way
+
+        //set private List<String> activeServers so we can do other stuffs
+        activeServers = notifier.requestActiveServers(loadBalancerAddress, loadBalancerPort); //List for active servers from load balancer  
+    }
+
+    //TODO: IMPLEMENT LOGIC FOR THIS LATER 
+    private void someMethodThatNeedsLeaderInfo(){
+        String leaderAddress = LeaderState.getLeaderAddress();
+
+        //use leader address as needed
+    }
+
+    
+
+
+
+    //END OF ELECTION RELATED CODE 
     
     public void workerHandleUploadRequest() {
         try {
@@ -105,12 +133,12 @@ public class ProtocolHandler {
         }
     }
 
-    private void notifyLoadBalancerDownload()
-    {
-        ServerActionNotifier notifier = new ServerActionNotifier();
-        serversToShareTo = notifier.notifyLoadBalancerDownload(loadBalancerAddress, loadBalancerPort);
+    // private void notifyLoadBalancerDownload()
+    // {
+    //     //ServerActionNotifier notifier = new ServerActionNotifier();
+    //     serversToShareTo = notifier.notifyLoadBalancerDownload(loadBalancerAddress, loadBalancerPort);
 
-    }
+    // }
 
     // method that is called when the server recieves a request to login
     // should return the userID to the client, -1 on failure
