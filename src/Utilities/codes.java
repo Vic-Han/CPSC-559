@@ -55,5 +55,7 @@ public class codes {
     public static final byte GETACTIVESERVERS = 125; 
     public static final byte REQUESTACTIVESERVERS = 126; 
     public static final byte REQUESTLEADERDETAILS = 127; 
-    public static final byte NEWLEADERNOTIFICATION = 55;
+    public static final byte NEWLEADERNOTIFICATION = 60;
+    public static final byte FILEPROPAGATIONSUCCESS = 70; 
+    public static final byte FILEPROPAGATIONFAILURE = 71; 
 }

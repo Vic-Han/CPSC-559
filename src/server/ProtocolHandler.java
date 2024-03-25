@@ -5,6 +5,7 @@ import java.net.Socket;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.List;
+import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -21,10 +22,13 @@ public class ProtocolHandler {
     private final String PREPEND = "C:\\CPSC559Proj\\SERVERFILES\\";
 
     //To notify load balancer server of download to propogate to other servers 
-    private int loadBalancerPort = 2001; 
+    private final int loadBalancerPort = 2001; 
+    private final int filePropagationPort = 1975; 
     private String loadBalancerAddress = "127.0.0.1";
     private List<String> serversToShareTo; 
-    private List<String> activeServers; 
+    private String failedPropagationServer;
+    private int successfulPropagations; 
+    //private List<String> activeServers; 
 
     public ProtocolHandler(DataOutputStream os, DataInputStream is, ServerActionNotifier notifier) {
         this.os = os;
@@ -35,19 +39,12 @@ public class ProtocolHandler {
     // method that is called when the server recieves a request to upload a file
     // should tell the client the worker IP and port number
     // should give the client an authentication token to talk to the worker(future)
-    // private void handleUploadRequest(String fileName, int userID, String ClientIP, int ClientPort) {
-    	
-    // }
 
-
-    //START OF ELECTION RELATED CODE
-    private void requestActiveServers()
+    //START OF FILE PROPAGATION CODE
+    private List<String> requestActiveServers()
     {
-        //ServerActionNotifier notifier = new ServerActionNotifier(); //Create instance of ServerActionNotifier so that we can communicate with LoadBalancerServer.java to use LoadBalancer.java to get the currently active Servers
-        activeServers.clear(); //clear to ensure that it is current and isn't getting messed up in any way
-
         //set private List<String> activeServers so we can do other stuffs
-        activeServers = notifier.requestActiveServers(loadBalancerAddress, loadBalancerPort); //List for active servers from load balancer  
+        return  notifier.requestActiveServers(loadBalancerAddress, loadBalancerPort); //List for active servers from load balancer  
     }
 
     //TODO: IMPLEMENT LOGIC FOR THIS LATER 
@@ -57,11 +54,87 @@ public class ProtocolHandler {
         //use leader address as needed
     }
 
-    
+    public void handleFilePropagation(File file, int ownerID)
+    {
+        successfulPropagations = 0; //set to 0 so we can check whether this actually worked properly 
+        failedPropagationServer = "";
+
+        List<String> servers = requestActiveServers(); 
+        int amountOfServersToPropagateTo = servers.size() - 1; //-1 as we don't want to propagate to leader 
+        try{
+        String checksum = ChecksumUtil.generateChecksum(file); 
+
+        for(String serverAddress: servers)
+        {
+            if(!serverAddress.equals(LeaderState.getLeaderAddress())){ //don't want to propagate to leader obviously 
+                propogateFileToNextServer(file, serverAddress, checksum, ownerID); 
+            }
+        }
 
 
+        // CASE: Where we have an issue in the propagation (Should probably also have some sort of variable to detect WHICH server failed so we can re-try later)
+        if (successfulPropagations != amountOfServersToPropagateTo)
+        {
+            //TODO: IMPLEMENT RETRY LOGIC 
+            //failedPropagationServer HOLDS THE SERVER IP ADDRESS OF THE SERVER THAT FAILED TO RECEIVE FILE 
+            //this would only handle 1 server failing to receive file (we can change this by using some sort of response code in the for loop above and handling there instead if we want )
+        }
+        }catch(Exception e)
+        {
+            System.err.println("Error generating checksum for file: " + file.getName() + ". Error: " + e.getMessage());
+            //TODO: Handle the error, e.g., notify the client of failure, log the error, retry, etc. 
+        }
+    }
 
-    //END OF ELECTION RELATED CODE 
+    private void propogateFileToNextServer(File file, String serverAddress, String checksum, int fileOwnerID)
+    {
+        //Get server's IP address by splitting; use filePropagationPort in tandem with this to connect 
+        String[] parts = serverAddress.split(":");
+        String host = parts[0];
+        try(Socket socket = new Socket(host, filePropagationPort);
+        DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+        DataInputStream in = new DataInputStream(socket.getInputStream()); // to receieve response from receiving server (i.e., SUCCESS OR FAILURE)
+        FileInputStream fileIn = new FileInputStream(file)){
+
+
+            //Send file metadata and checksum 
+            out.writeUTF(file.getName()); //send file name
+            out.writeInt(fileOwnerID); //give the file owner ID (not sure if we need this but probably do for database updates)
+            out.writeLong(file.length()); 
+            out.writeUTF(checksum);
+
+
+            //Send file content
+            byte[] buffer = new byte[4096];
+            int bytesRead; 
+
+            while((bytesRead = fileIn.read(buffer)) != -1)
+            {
+                out.write(buffer, 0, bytesRead); 
+                out.flush(); 
+            }
+
+            //THIS SHOULD HANDLE SUCCESSFUL/UNSUCCESSFUL CASES
+            byte responseFromReceiver = in.readByte(); 
+            if(responseFromReceiver == codes.FILEPROPAGATIONFAILURE)
+            {
+                //TODO: HANDLE FAILURE SOMEHOW
+                failedPropagationServer = serverAddress; //update string so we can handle this issue (re-try or some other method) TODO: implement that logic 
+            }
+            else{ //file propagation successful to server so we should probably track/count how many successes (if all successful, notify load balancer?)
+
+                successfulPropagations += 1;             
+            }
+
+        } catch(Exception e)
+        {
+            System.err.println("Failed to propagate file to server " + serverAddress + ": " + e.getMessage());
+            //TODO: LOG OR HANDLE EXCEPTION 
+        }
+
+
+    }
+    //END OF FILE PROPAGATION RELATED CODE
     
     public void workerHandleUploadRequest() {
         try {
@@ -90,6 +163,7 @@ public class ProtocolHandler {
             e.printStackTrace();
         }
     }
+
     
     // method that is called when the server recieves a request to download a file
     // should tell the client the worker IP and port number that has the download

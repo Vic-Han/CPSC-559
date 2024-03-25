@@ -3,6 +3,9 @@ package server;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.Reader;
@@ -18,10 +21,12 @@ public class Server {
     private int mainServicePort;
     private int healthCheckPort; 
     private final int managementPort = 1984; 
+    private final int filePropagationPort = 1985; 
     private AtomicInteger currentTerm = new AtomicInteger(0); //sync stuff
     private volatile int votedFor = -1; //volatile tells compiler that value of votedFor may change at any time without any action being taken by the code the compiler finds nearby 
     private volatile ServerState serverState = ServerState.FOLLOWER; //volatile tells compiler that value of serverState may change at any time without any action being taken by the code the compiler finds nearby 
     private String currentLeaderAddress; 
+    private final String PREPEND = "C:\\CPSC559Proj\\SERVERFILES\\";
 
     //Used to track if the main server (leader) has crashed/is not online 
     private AtomicBoolean isLeaderDown = new AtomicBoolean(false);
@@ -75,6 +80,80 @@ public class Server {
         }).start();
     }
 
+    private void startFilePropagationListener(){
+        new Thread(() -> {
+            try (ServerSocket serverSocket = new ServerSocket(filePropagationPort)) {
+                System.out.println("Listening for file propagation on port " + filePropagationPort);
+                while(true)
+                {
+                    try(Socket clientSocket = serverSocket.accept();
+                    DataInputStream in = new DataInputStream(clientSocket.getInputStream());
+                    DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream())){
+
+                        String fileName = in.readUTF(); 
+                        int fileOwnerID = in.readInt();
+                        long fileSize = in.readLong(); 
+                        String checksum = in.readUTF(); 
+
+                        File receivedFile = new File(PREPEND + fileName); 
+                        receivedFile.createNewFile(); 
+
+                        //Handle incoming file transfer. 
+                        try(FileOutputStream fileOut = new FileOutputStream(receivedFile)){
+
+                            byte[] buffer = new byte[4096]; 
+                            int read; 
+
+                            while(fileSize > 0 && (read = in.read(buffer, 0, Math.min(buffer.length, (int) fileSize))) != -1)
+                            {
+                                fileOut.write(buffer, 0, read); 
+                                fileSize -= read; 
+                            }
+                            
+                        }
+
+                        //Verify checksum
+                        try{
+                        //Verify the checksum received from the leader server by verifying it (calculating checksum on file created (received) and comparing to received checksum from leader )
+                        boolean isValid = ChecksumUtil.verifyChecksum(receivedFile, checksum);
+                        //handle cases based on checksum result 
+                        if(!isValid){
+                            //TODO: HANDLE INVALID CHECKSUM (i.e., failed propagaiton)
+                            out.writeByte(codes.FILEPROPAGATIONFAILURE);
+                        }
+                        else{
+                            System.out.println("File " + fileName + " received and verified.");
+                            out.writeByte(codes.FILEPROPAGATIONSUCCESS);
+
+                            //Notify load balancer server? or let leader notify after all success. Probably let leader notify. 
+                        }
+
+
+                        }catch(Exception e)
+                        {
+                            System.err.println("Error generating checksum for file: " + fileName + ". Error: " + e.getMessage());
+                            //TODO: Handle the error, e.g., notify the client of failure, log the error, retry, etc. 
+                        }
+
+
+
+                    }catch(IOException e)
+                    {
+                        //TODO: log/handle exception 
+                    }
+                }
+
+            }catch(IOException e)
+            {
+                //TODO: log/handle exception here
+            }
+
+
+
+
+        }).start();
+    }
+
     public void start()
     {
         ServerActionNotifier actionNotifier = new ServerActionNotifier(); 
@@ -95,7 +174,9 @@ public class Server {
                 }
                 else
                 {
-                    //handle according to raft protocol if not the leader 
+                    //TODO: implement non leader logic?  
+                    //Do I just start the file propagation listener here? that probably makes most sense (LEADER SHOULDNT HAVE TO RECEIEVE FILES FROM OTHER SERVERS)
+                    startFilePropagationListener();
                 }
             }
            
