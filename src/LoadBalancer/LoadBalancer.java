@@ -13,7 +13,7 @@ public class LoadBalancer {
     private int leaderPort = -1; //keep track of current leaders port (default/uninitialized = -1)
 
     //For notificaiton management (i.e., new leader, file propagation, etc.)
-    private final int managementPort = 1984; 
+    private final int managementPort = ServicePorts.MANAGEMENT_PORT; 
     private LeaderNotifier leaderNotifier = new LeaderNotifier();
 
 

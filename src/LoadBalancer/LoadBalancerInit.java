@@ -7,7 +7,6 @@ public class LoadBalancerInit {
 
     public static void main(String[] args)
     {
-        int loadBalancerPort = 2001; 
 
         //Need to have the server address list available for this
         List<String> serverAddresses = Arrays.asList(
@@ -21,7 +20,7 @@ public class LoadBalancerInit {
         //init load balancer object with server addresses list 
         LoadBalancer loadBalancer = new LoadBalancer(serverAddresses);
         //start the load balancer server 
-        startLoadBalancerServer(loadBalancer, loadBalancerPort);
+        startLoadBalancerServer(loadBalancer);
 
         //Init and start health check scheduler 
         HealthCheckScheduler healthCheckScheduler = new HealthCheckScheduler(loadBalancer); 
@@ -31,13 +30,13 @@ public class LoadBalancerInit {
 
     }
 
-    private static void startLoadBalancerServer(LoadBalancer loadBalancer, int port)
+    private static void startLoadBalancerServer(LoadBalancer loadBalancer)
     {
         //start LoadBalancer server on a separate thread 
         new Thread(() -> {
-            LoadBalancerServer server = new LoadBalancerServer(loadBalancer, port);
+            LoadBalancerServer server = new LoadBalancerServer(loadBalancer);
             server.start();
-        }).start();
+        }, "LoadBalancerServerThread").start();
     }
 
 }

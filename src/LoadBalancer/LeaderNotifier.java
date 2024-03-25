@@ -8,10 +8,11 @@ import java.util.List;
 
 import Utilities.codes;
 import Utilities.LeaderChangeNotification;
+import Utilities.ServicePorts;
 
 public class LeaderNotifier {
 
-    private final int managementPort = 1984; //management port for control messages
+    private final int managementPort = ServicePorts.MANAGEMENT_PORT; //management port for control messages
 
     public LeaderNotifier(){
     }

@@ -18,47 +18,38 @@ import java.util.concurrent.atomic.AtomicInteger;
 import Utilities.codes;
 import server.ServerState.State;
 import Utilities.LeaderChangeNotification;
+import Utilities.ServicePorts;
 
 public class Server {
-    private int mainServicePort;
-    private int healthCheckPort; 
-    private final int managementPort = 1984; 
-    private final int filePropagationPort = 1985; 
+    private boolean isMainServiceRunning = false; 
+    private boolean isFilePropagationServiceRunning = false; 
+    private final int mainServicePort = ServicePorts.MAIN_SERVICE_PORT;
+    private final int healthCheckPort = ServicePorts.HEALTH_CHECK_PORT;
+    private final int managementPort = ServicePorts.MANAGEMENT_PORT; 
+    private final int filePropagationPort = ServicePorts.FILE_PROPAGATION_PORT; 
     //private volatile ServerState serverState = ServerState.FOLLOWER; //volatile tells compiler that value of serverState may change at any time without any action being taken by the code the compiler finds nearby 
     private volatile ServerState serverState;
-    private String currentLeaderAddress; 
     private final String PREPEND = "C:\\CPSC559Proj\\SERVERFILES\\";
     private String thisServersAddress; 
     private ServerActionNotifier actionNotifier;
-
-    //Used to track if the main server (leader) has crashed/is not online 
-    private AtomicBoolean isLeaderDown = new AtomicBoolean(false);
     
 
-    public Server(int mainServicePort, int healthCheckPort, String thisServersAddress)
+    public Server(String thisServersAddress)
     {
-        this.mainServicePort = mainServicePort; 
-        this.healthCheckPort = healthCheckPort;
         this.thisServersAddress = thisServersAddress; //so that we can track who the leader is
     }
 
-    // This method might be called directly by HealthCheckService if direct communication is set up
-    // to signal a detected leader failure. However, the primary action after such detection
-    // is to wait for the LoadBalancer to notify of the new leader.
-    public void detectLeaderFailure() {
-        System.out.println("Leader failure detected. Awaiting new leader info from LoadBalancer.");
-        // The actual update for the new leader will be handled in handleNewLeader(),
-        // which is triggered by incoming management messages.
+    //TODO: determine if we need this at any point; as of now we don't
+    // // This method might be called directly by HealthCheckService if direct communication is set up
+    // // to signal a detected leader failure. However, the primary action after such detection
+    // // is to wait for the LoadBalancer to notify of the new leader.
+    // public void detectLeaderFailure() {
+    //     System.out.println("Leader failure detected. Awaiting new leader info from LoadBalancer.");
+    //     // The actual update for the new leader will be handled in handleNewLeader(),
+    //     // which is triggered by incoming management messages.
 
-        //TODO: IMPLEMENT LOGIC FOR THIS
-    }
-
-    private synchronized void handleNewLeader(String newLeaderAddress) {
-        //this.currentLeaderAddress = newLeaderAddress; // Update the current leader's address
-        LeaderState.setLeaderAddress(newLeaderAddress);
-        System.out.println("Updated current leader to: " + newLeaderAddress);
-        // TODO: dd any additional logic needed to reconfigure the server in response to the new leader
-    }
+    //     //TODO: IMPLEMENT LOGIC FOR THIS
+    // }
 
     private void startManagementListener() {
         new Thread(() -> {
@@ -70,27 +61,10 @@ public class Server {
                         Object object = in.readObject();
                         if (object instanceof LeaderChangeNotification) {
                             LeaderChangeNotification notification = (LeaderChangeNotification) object;
-                            if (notification.getMessageType() == LeaderChangeNotification.MessageType.LEADER_CHANGE_NOTIFICATION) {
-                                handleNewLeader(notification.getLeaderAddress());
-                                if(thisServersAddress.equals(notification.getLeaderAddress()))
-                                {
-                                    // This server is the new leader 
-                                    ServerState.getInstance().setState(ServerState.State.LEADER);
-                                    System.out.println("This server is now the leader.");
-
-                                    //TODO: start runner thread here 
-                                    //new Thread(new Runner(clientSocket, actionNotifier)).start(); // spwan a runner thread to serve the client; //client communicaiton with server uses Runner to interpret commands
-                                    startMainService(); //I think this is cleaner than the above line and hopefully prevents issues
-                                }
-                                else{ //set as follow to ensure its synced properly 
-                                    ServerState.getInstance().setState(ServerState.State.FOLLOWER);
-                                }
-                            //Case where the leader didn't change (i.e., system initializaiton)
-                            }else if(notification.getMessageType() == LeaderChangeNotification.MessageType.SET_LEADER_STATE_NOTIFICATION && thisServersAddress.equals(notification.getLeaderAddress()))
-                            {
-                                ServerState.getInstance().setState(ServerState.State.LEADER);
-                                System.out.println("This server is now the leader.");
-                            }
+                            processLeaderChangeNotification(notification);
+                        }
+                        else{
+                            //handle other types of notifications if we need 
                         }
                     } catch (Exception e) {
                         System.err.println("Error handling management connection: " + e.getMessage());
@@ -99,8 +73,20 @@ public class Server {
             } catch (Exception e) {
                 System.err.println("Failed to start management listener: " + e.getMessage());
             }
-        }).start();
+        }, "ManagementListenerThread").start();
     }
+
+
+    private void processLeaderChangeNotification(LeaderChangeNotification notification) {
+        if (notification.getMessageType() == LeaderChangeNotification.MessageType.LEADER_CHANGE_NOTIFICATION) {
+            // Determine the new state based on whether this server's address matches the leader address in the notification
+            ServerState.State newState = notification.getLeaderAddress().equals(thisServersAddress) ? ServerState.State.LEADER : ServerState.State.FOLLOWER;
+            
+            // Call updateServerState with the new state and the leader's address from the notification
+            updateServerState(newState, notification.getLeaderAddress());
+        }
+    }
+
 
     private void startFilePropagationListener(){
         new Thread(() -> {
@@ -140,6 +126,7 @@ public class Server {
                         boolean isValid = ChecksumUtil.verifyChecksum(receivedFile, checksum);
                         //handle cases based on checksum result 
                         if(!isValid){
+                            System.err.println("Received file checksum is invalid.");
                             //TODO: HANDLE INVALID CHECKSUM (i.e., failed propagaiton)
                             out.writeByte(codes.FILEPROPAGATIONFAILURE);
                         }
@@ -161,6 +148,8 @@ public class Server {
 
                     }catch(IOException e)
                     {
+                        System.err.println("Failed to start file propagation listener: " + e.getMessage());
+                        // Additional startup error handling logic
                         //TODO: log/handle exception 
                     }
                 }
@@ -173,78 +162,96 @@ public class Server {
 
 
 
-        }).start();
+        }, "FilePropagationListenerThread").start(); // Naming the thread for easier identification
     }
 
     private void startMainService(){
-        try(ServerSocket serverSocket = new ServerSocket(mainServicePort)){
-            System.out.println("Server listening on port: " + mainServicePort);
-
-            while(true)//server can accept multiple clients on 1 port 
-            {
-                //Socket clientSocket = serverSocket.accept();
-                if(this.serverState.getState() == State.LEADER) //only actually allow the client to connect to the LEADER server
+        isMainServiceRunning = true; //so we don't start multiple instances of this
+        new Thread(() -> {
+            try(ServerSocket serverSocket = new ServerSocket(mainServicePort)){
+                System.out.println("Server listening on port: " + mainServicePort);
+    
+                while(true) //server can accept multiple clients on 1 port 
                 {
-                    Socket clientSocket = serverSocket.accept();
-                    new Thread(new Runner(clientSocket, actionNotifier)).start(); // spwan a runner thread to serve the client; //client communicaiton with server uses Runner to interpret commands
+                    if(this.serverState.getState() == State.LEADER) //only actually allow the client to connect to the LEADER server
+                    {
+                        Socket clientSocket = serverSocket.accept();
+                        new Thread(new Runner(clientSocket, actionNotifier)).start(); // spawn a runner thread to serve the client
+                    }
                 }
+               
+            }catch(Exception e)
+            {
+                System.out.println("Server Exception: " + e.getMessage());
             }
-           
-        }catch(Exception e)
-        {
-            System.out.println("Server Exception: " + e.getMessage());
+        }, "MainServiceThread").start();
+    }
+
+    public void initializeServerState() {
+        String leaderAddress = actionNotifier.requestLeaderDetails(); // Request the current leader's address
+        
+        if (thisServersAddress.equals(leaderAddress)) {
+            // This server is the leader
+            updateServerState(ServerState.State.LEADER, leaderAddress);
+        } else {
+            // This server is a follower
+            updateServerState(ServerState.State.FOLLOWER, leaderAddress);
+        }
+    }
+
+    public void updateServerState(ServerState.State newState, String newLeaderAddress) {
+        ServerState.getInstance().setState(newState);
+        if (newState == ServerState.State.LEADER) {
+            if (!isMainServiceRunning) {
+                startMainService();
+                isMainServiceRunning = true;
+            }
+        // Update the leader's address when this server becomes the leader
+        newLeaderAddress = thisServersAddress;
+
+        } else if (newState == ServerState.State.FOLLOWER) {
+            if (isMainServiceRunning) {
+                // This shouldn't ever be reached with our current setup for leader transitions (as previous leader coming back online will not become the leader again)
+                isMainServiceRunning = false;
+            }
+            if (!isFilePropagationServiceRunning) {
+                startFilePropagationListener();
+                isFilePropagationServiceRunning = true;
+            }
         }
 
+        // Update the leader's address when transitioning to a follower
+        LeaderState.setLeaderAddress(newLeaderAddress);
+    }
+
+    private void startHealthCheckService() {
+        new Thread(new HealthCheckService(this,  actionNotifier), "HealthCheckServiceThread").start();
     }
 
     public void start()
     {
         actionNotifier = new ServerActionNotifier(); 
-        //int mainServicePort = 1972; //the port the server is on (each should probably be hardcoded if we are just running on separate machines)
-        new Thread(new HealthCheckService(healthCheckPort, this, mainServicePort, actionNotifier)).start(); //leader port is the same regardless of which machine hosting (only IP differs for main service socket connections)
+        // Start the management listener to listen for leader change notifications
         startManagementListener();
 
+        // Start the main service if this server is the leader, otherwise start the file propagation listener
+        initializeServerState(); // Initialize the server state based on the current leader
 
-        ServerState.getInstance().getState();
-        if(this.serverState.getState() != State.LEADER)
-        {
-            //TODO: implement non leader logic?  
-            startFilePropagationListener();
-        }
+        // Start HealthCheckService in a separate thread
+        startHealthCheckService();
 
-            startMainService();
 
-        
-        // try(ServerSocket serverSocket = new ServerSocket(mainServicePort)){
-        //     System.out.println("Server listening on port: " + mainServicePort);
-
-        //     while(true)//server can accept multiple clients on 1 port 
-        //     {
-        //         Socket clientSocket = serverSocket.accept();
-        //         if(this.serverState.getState() == State.LEADER) //only actually allow the client to connect to the LEADER server
-        //         {
-        //             new Thread(new Runner(clientSocket, actionNotifier)).start(); // spwan a runner thread to serve the client; //client communicaiton with server uses Runner to interpret commands
-        //         }
-        //     }
-           
-        // }catch(Exception e)
-        // {
-        //     System.out.println("Server Exception: " + e.getMessage());
-        // }
     }
 
 
     public static void main(String[] args)
     {
-        int mainServicePort = 1972; 
-        int healthCheckPort = 1973; 
         //should probably parse from args the server address so we can do other stuffs (for now I'll hardcode to 127.0.0.1 but we need to change that )
             //TODO: parse args to get correct server IP addr 
         String thisAddress = "127.0.0.1";
 
-        //Start dedicated health check service server 
 
-        new Server(mainServicePort, healthCheckPort, thisAddress).start();
+        new Server(thisAddress).start();
     }
 
 }

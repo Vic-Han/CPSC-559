@@ -6,16 +6,16 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
 
+import Utilities.ServicePorts;
 import Utilities.codes;
 
 public class LoadBalancerServer {
     private LoadBalancer loadBalancer; 
-    private int listenPort; 
+    private final int listenPort = ServicePorts.LOAD_BALANCE_SERVER_PORT; 
 
-    public LoadBalancerServer(LoadBalancer loadBalancer, int listenPort)
+    public LoadBalancerServer(LoadBalancer loadBalancer)
     {
         this.loadBalancer = loadBalancer; 
-        this.listenPort = listenPort; 
     }
 
     public void start(){

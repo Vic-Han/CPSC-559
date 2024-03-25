@@ -22,8 +22,8 @@ public class ProtocolHandler {
     private final String PREPEND = "C:\\CPSC559Proj\\SERVERFILES\\";
 
     //To notify load balancer server of download to propogate to other servers 
-    private final int loadBalancerPort = 2001; 
-    private final int filePropagationPort = 1975; 
+    private final int loadBalancerPort = ServicePorts.LOAD_BALANCE_SERVER_PORT; 
+    private final int filePropagationPort = ServicePorts.FILE_PROPAGATION_PORT; 
     private String loadBalancerAddress = "127.0.0.1";
     private List<String> serversToShareTo; 
     private String failedPropagationServer;
@@ -75,23 +75,18 @@ public class ProtocolHandler {
                 if(!success)
                 {
                     System.err.println("Failed to send file to server: " + serverAddress);
-                    // Optionally, implement a retry mechanism here
+                    // TODO: LOG? 
+                }
+                else{
+                    successfulPropagations += 1; 
                 }
             }
         }
 
-
-        // CASE: Where we have an issue in the propagation (Should probably also have some sort of variable to detect WHICH server failed so we can re-try later)
-        // if (successfulPropagations != amountOfServersToPropagateTo)
-        // {
-        //     //TODO: IMPLEMENT RETRY LOGIC 
-        //     //failedPropagationServer HOLDS THE SERVER IP ADDRESS OF THE SERVER THAT FAILED TO RECEIVE FILE 
-        //     //this would only handle 1 server failing to receive file (we can change this by using some sort of response code in the for loop above and handling there instead if we want )
-        // }
-        // else{
-        //     //TODO: update database and send to other servers
-
-        // }
+        if(successfulPropagations == (amountOfServersToPropagateTo - 1))
+        {
+            //TODO: UPDATE DATABASE AND SEND TO OTHER SERVERS
+        }
         }catch(Exception e)
         {
             System.err.println("Error generating checksum for file: " + file.getName() + ". Error: " + e.getMessage());

@@ -19,6 +19,7 @@ import Utilities.*;
 // class is static because it is not meant to be instantiated by several threads, may change later
 public class ClientLogic {
 
+	private final int loadBalancerPort = ServicePorts.LOAD_BALANCE_SERVER_PORT;
     DataInputStream in;
     DataOutputStream out;
 		byte id;
@@ -28,10 +29,9 @@ public class ClientLogic {
     //private int userID;
 
     //constructor called when given host and port to instantiate variables associated
-    public ClientLogic(String hostName, int portNumber) //for the load balancer server 
+    public ClientLogic() //for the load balancer server 
     {
 		String loadBalancerAddress = "127.0.0.1"; //TODO: change this later 
-		int loadBalancerPort = 2001; //replacing master with this as we don't need Master.Java anymore (it wont work distributed)
 
 		try 
 		{

@@ -7,11 +7,13 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import Utilities.ServicePorts;
+
 public class HealthCheckService implements Runnable{
 
-    private final int healthCheckPort; 
+    private final int healthCheckPort = ServicePorts.HEALTH_CHECK_PORT; 
     private final Server server; 
-    private final int leaderPort; //i.e., the main service port 1972 
+    private final int leaderPort = ServicePorts.MAIN_SERVICE_PORT; //i.e., the main service port 1972 
     ServerActionNotifier notifier; 
 
     //Exponential backoff parameters (exponential backoff in case of consecutive health check failures to avoid overwhelming the leader)
@@ -20,11 +22,9 @@ public class HealthCheckService implements Runnable{
     private final double backoffMultiplier = 2.0; //Multiplier to increase backoff time 
 
 
-    public HealthCheckService(int healthCheckPort, Server server, int leaderPort, ServerActionNotifier notifier)//, String leaderAddress)
+    public HealthCheckService(Server server, ServerActionNotifier notifier)//, String leaderAddress)
     {
-        this.healthCheckPort = healthCheckPort; 
         this.server = server;
-        this.leaderPort = leaderPort;
         this.notifier = notifier;
         //this.leaderAddress = leaderAddress; 
 
@@ -45,7 +45,7 @@ public class HealthCheckService implements Runnable{
                 } else {
                     // Increase backoff time upon failure
                     backoffTime = Math.min(backoffTime * (long) backoffMultiplier, maxBackoffTime);
-                    server.detectLeaderFailure(); // Notify the server of leader failure
+                   // server.detectLeaderFailure(); // Notify the server of leader failure
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // Restore the interrupted status

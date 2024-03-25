@@ -6,10 +6,12 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+import Utilities.ServicePorts;
 import Utilities.codes;
 
 public class ServerActionNotifier {
     List<String> serversToShareTo; 
+    private final int loadBalancerPort = ServicePorts.LOAD_BALANCE_SERVER_PORT;
 
     // Method which requests leaders address & port from the LoadBalancer
         // Because the HealthCheckService & the ProtocolHandler are using shraed instance of ServerActionNotifier we must make this thread safe (more efficient to share 1 instance)
@@ -17,7 +19,6 @@ public class ServerActionNotifier {
     {
 
         String loadBalancerAddress = "127.0.0.1"; //TODO: FIX THE IP ON THIS LATER (UNLESS WE KEEP IT AT LOCALHOST IDK)
-        int loadBalancerPort = 2001; 
         try(Socket socket = new Socket(loadBalancerAddress, loadBalancerPort);
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
             DataInputStream in = new DataInputStream(socket.getInputStream())){

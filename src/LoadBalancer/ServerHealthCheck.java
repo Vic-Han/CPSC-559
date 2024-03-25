@@ -7,6 +7,8 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
+import Utilities.ServicePorts;
+
 //Runnable allows multiple Asynchronous executions (i.e., Parallel Execution to reduce time to check all servers)
 //Using separate threads for health checks also ensures these calls are non-blocking (i.e., don't slow or stop main thread executions)
 //Runnable allows us to use 'ScheduledExecutorService' for regular interval checks (for round robin)
@@ -72,7 +74,7 @@ public class ServerHealthCheck implements Runnable{
         String host = serverAddress.split(":")[0]; 
         //String host = parts[0]; //get the host (IP)
         //int port = Integer.parseInt(parts[1]); //get the port 
-        int healthCheckPort = 1973; //TODO: LEAVE THIS
+        int healthCheckPort = ServicePorts.HEALTH_CHECK_PORT; //TODO: LEAVE THIS
 
         try (Socket socket = new Socket())
         {
