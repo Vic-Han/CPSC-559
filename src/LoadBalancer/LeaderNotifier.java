@@ -16,7 +16,7 @@ public class LeaderNotifier {
 
     public void notifyServersOfNewLeader(String newLeaderAddress, List<String> serverAddresses)
     {
-        RPCMessage newLeaderMessage = new RPCMessage(RPCMessage.MessageType.NEW_LEADER, 0, -1, newLeaderAddress);
+        RPCMessage newLeaderMessage = new RPCMessage(RPCMessage.MessageType.NEW_LEADER, newLeaderAddress);
         for(String serverAddress : serverAddresses)
         {
             if(!serverAddress.equals(newLeaderAddress)) //exclude new leader 

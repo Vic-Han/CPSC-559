@@ -5,23 +5,27 @@ package server;
 public class RPCMessage {
 
     public enum MessageType{
-        REQUEST_VOTE,
-        APPEND_ENTRIES, //for heartbeats
+        PREVIOUS_LEADER, //maybe for propagating back if the original leader comes back online? not sure if we need
         NEW_LEADER //handle new leader notifications
     }
 
     private final MessageType messageType;
-    private final int term; 
-    private final int candidateID; 
     private final String leaderAddress;
+    private final String previousLeaderAddress;
 
     //constructor
-    public RPCMessage(MessageType messageType, int term, int candidateID, String leaderAddress)
+    public RPCMessage(MessageType messageType, String leaderAddress, String previousLeaderAddress)
     {
         this.messageType = messageType; 
-        this.term = term; 
-        this.candidateID = candidateID;
         this.leaderAddress = leaderAddress; //can be null for non new-leader messages if needed
+        this.previousLeaderAddress = previousLeaderAddress;
+    }
+
+    public RPCMessage(MessageType messageType, String leaderAddress)
+    {
+        this.messageType = messageType; 
+        this.leaderAddress = leaderAddress; //can be null for non new-leader messages if needed
+        this.previousLeaderAddress = ""; 
     }
 
     public MessageType getMessageType()
@@ -29,19 +33,12 @@ public class RPCMessage {
         return this.messageType; 
     }
 
-    public int getTerm()
-    {
-        return this.term; 
-    }
-
-    public int getCandidateID()
-    {
-        return this.candidateID;
-    }
 
     public String getLeaderAddress()
     {
         return leaderAddress;
     }
+
+
 
 }
