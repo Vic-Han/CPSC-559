@@ -28,6 +28,10 @@ public class ProtocolHandler {
     private List<String> serversToShareTo; 
     private String failedPropagationServer;
     private int successfulPropagations; 
+
+    //related to retries for propagation 
+    private static final int MAX_RETRIES = 3; //maximum number of retries
+    private static final long RETRY_DELAY_MS = 1000; //delay between retries in Milliseconds (i.e., 1 second)
     //private List<String> activeServers; 
 
     public ProtocolHandler(DataOutputStream os, DataInputStream is, ServerActionNotifier notifier) {
@@ -67,22 +71,27 @@ public class ProtocolHandler {
         for(String serverAddress: servers)
         {
             if(!serverAddress.equals(LeaderState.getLeaderAddress())){ //don't want to propagate to leader obviously 
-                propogateFileToNextServer(file, serverAddress, checksum, ownerID); 
+                boolean success = propagateFileToNextServer(file, serverAddress, checksum, ownerID); 
+                if(!success)
+                {
+                    System.err.println("Failed to send file to server: " + serverAddress);
+                    // Optionally, implement a retry mechanism here
+                }
             }
         }
 
 
         // CASE: Where we have an issue in the propagation (Should probably also have some sort of variable to detect WHICH server failed so we can re-try later)
-        if (successfulPropagations != amountOfServersToPropagateTo)
-        {
-            //TODO: IMPLEMENT RETRY LOGIC 
-            //failedPropagationServer HOLDS THE SERVER IP ADDRESS OF THE SERVER THAT FAILED TO RECEIVE FILE 
-            //this would only handle 1 server failing to receive file (we can change this by using some sort of response code in the for loop above and handling there instead if we want )
-        }
-        else{
-            //TODO: update database and send to other servers
+        // if (successfulPropagations != amountOfServersToPropagateTo)
+        // {
+        //     //TODO: IMPLEMENT RETRY LOGIC 
+        //     //failedPropagationServer HOLDS THE SERVER IP ADDRESS OF THE SERVER THAT FAILED TO RECEIVE FILE 
+        //     //this would only handle 1 server failing to receive file (we can change this by using some sort of response code in the for loop above and handling there instead if we want )
+        // }
+        // else{
+        //     //TODO: update database and send to other servers
 
-        }
+        // }
         }catch(Exception e)
         {
             System.err.println("Error generating checksum for file: " + file.getName() + ". Error: " + e.getMessage());
@@ -90,53 +99,66 @@ public class ProtocolHandler {
         }
     }
 
-    private void propogateFileToNextServer(File file, String serverAddress, String checksum, int fileOwnerID)
-    {
+
+    private boolean propagateFileToNextServer(File file, String serverAddress, String checksum, int fileOwnerID) {
         //Get server's IP address by splitting; use filePropagationPort in tandem with this to connect 
         String[] parts = serverAddress.split(":");
         String host = parts[0];
-        try(Socket socket = new Socket(host, filePropagationPort);
-        DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-        DataInputStream in = new DataInputStream(socket.getInputStream()); // to receieve response from receiving server (i.e., SUCCESS OR FAILURE)
-        FileInputStream fileIn = new FileInputStream(file)){
+        int attempt = 0;
+        boolean success = false;
+    
+        while (attempt < MAX_RETRIES && !success) {
+            try (Socket socket = new Socket(host, filePropagationPort);
+                 DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+                 DataInputStream in = new DataInputStream(socket.getInputStream());
+                 FileInputStream fileIn = new FileInputStream(file)) {
+    
+
+                //Send file metadata and checksum 
+                out.writeUTF(file.getName()); //send file name
+                out.writeInt(fileOwnerID); //give the file owner ID (not sure if we need this but probably do for database updates)
+                out.writeLong(file.length()); 
+                out.writeUTF(checksum);
 
 
-            //Send file metadata and checksum 
-            out.writeUTF(file.getName()); //send file name
-            out.writeInt(fileOwnerID); //give the file owner ID (not sure if we need this but probably do for database updates)
-            out.writeLong(file.length()); 
-            out.writeUTF(checksum);
+                //Send file content
+                byte[] buffer = new byte[4096];
+                int bytesRead; 
 
-
-            //Send file content
-            byte[] buffer = new byte[4096];
-            int bytesRead; 
-
-            while((bytesRead = fileIn.read(buffer)) != -1)
-            {
-                out.write(buffer, 0, bytesRead); 
-                out.flush(); 
+                while((bytesRead = fileIn.read(buffer)) != -1)
+                {
+                    out.write(buffer, 0, bytesRead); 
+                    out.flush(); 
+                }
+    
+                // Check response from the receiving server
+                byte responseFromReceiver = in.readByte();
+                if (responseFromReceiver == codes.FILEPROPAGATIONFAILURE) {
+                    System.err.println("Failed to propagate file to server " + serverAddress + " on attempt " + (attempt + 1));
+                    // Prepare for a retry
+                    attempt++;
+                    Thread.sleep(RETRY_DELAY_MS);
+                } else {
+                    System.out.println("File successfully propagated to server " + serverAddress);
+                    success = true; // Exit the loop on success
+                }
+            } catch (Exception e) {
+                System.err.println("Failed to propagate file to server " + serverAddress + " on attempt " + (attempt + 1) + ": " + e.getMessage());
+                attempt++;
+                try {
+                    Thread.sleep(RETRY_DELAY_MS); // Wait before retrying
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt(); // Restore the interrupted status
+                    System.err.println("Retry interrupted for server: " + serverAddress);
+                    return false;
+                }
             }
-
-            //THIS SHOULD HANDLE SUCCESSFUL/UNSUCCESSFUL CASES
-            byte responseFromReceiver = in.readByte(); 
-            if(responseFromReceiver == codes.FILEPROPAGATIONFAILURE)
-            {
-                //TODO: HANDLE FAILURE SOMEHOW
-                failedPropagationServer = serverAddress; //update string so we can handle this issue (re-try or some other method) TODO: implement that logic 
-            }
-            else{ //file propagation successful to server so we should probably track/count how many successes (if all successful, notify load balancer?)
-
-                successfulPropagations += 1;             
-            }
-
-        } catch(Exception e)
-        {
-            System.err.println("Failed to propagate file to server " + serverAddress + ": " + e.getMessage());
-            //TODO: LOG OR HANDLE EXCEPTION 
         }
-
-
+    
+        if (!success) {
+            System.err.println("Failed to propagate file to server " + serverAddress + " after " + MAX_RETRIES + " attempts.");
+        }
+        return success;
     }
     //END OF FILE PROPAGATION RELATED CODE
     

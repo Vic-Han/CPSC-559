@@ -20,7 +20,7 @@ public class HealthCheckScheduler {
             boolean isLeaderCheck = serverAddress.equals(loadBalancer.getLeaderAddress()); //get the current leader address to check if we are running regular or leader check
             ServerHealthCheck healthCheck = new ServerHealthCheck(serverAddress, loadBalancer, isLeaderCheck);
             //Currently set to run every 10 seconds (supposedly 10 to 30 is the best range so we may need to lower this if we find synchronization isn't happening properly)
-            scheduler.scheduleAtFixedRate(healthCheck, 0, 5, TimeUnit.SECONDS); 
+            scheduler.scheduleAtFixedRate(healthCheck, 0, 5, TimeUnit.SECONDS); //Have a isLeaderCheck boolean so we can use this for normal checks and leader checks
         });
 
         //Schedule separate task for leaders health check

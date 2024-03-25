@@ -53,7 +53,7 @@ public class Server {
         //TODO: IMPLEMENT LOGIC FOR THIS
     }
 
-    private void handleNewLeader(String newLeaderAddress) {
+    private synchronized void handleNewLeader(String newLeaderAddress) {
         //this.currentLeaderAddress = newLeaderAddress; // Update the current leader's address
         LeaderState.setLeaderAddress(newLeaderAddress);
         System.out.println("Updated current leader to: " + newLeaderAddress);
