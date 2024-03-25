@@ -29,55 +29,35 @@ public class LoadBalancer {
         if(!serverAddresses.isEmpty())
         {
             updateLeaderPort(serverAddresses.get(0));
-        }
-    }
+            String leaderServerInformation = initialServerAddresses.get(0);
+            try {
+                leaderNotifier.notifyInitialLeaderState(leaderServerInformation);
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
 
-    public synchronized void checkLeaderHealth()
-    {
-        String leaderAddress = getLeaderAddress(); 
-        if(leaderAddress != null && !checkServerHealth(leaderAddress))
-        {
-            handleLeaderFailure(leaderAddress); 
         }
-    }
-
-    private boolean checkServerHealth(String leaderAddress)
-    {
-        return false; 
     }
 
     public synchronized void handleLeaderFailure(String failedLeaderAddress)
     {
+        System.out.println("The leader has failed, transitioning leader status to next leader in the active server list ");
+        
+        if(!serverAddresses.isEmpty()){ //check to see if we can even establish a new leader before trying 
         String newLeaderAddress = determineNewLeader(failedLeaderAddress); //removes failed leader from serverAddresses list and gets the next in line
+
+        // Ensure theres actually a new leader 
+        if(newLeaderAddress != null)
+        {
         leaderNotifier.notifyServersOfNewLeader(newLeaderAddress, serverAddresses);
+        }
+        }else{//case where no more servers after leader dies
+            System.err.println("Critical Failure; Leader died and no other servers exist"); 
+        }
+
+
     }
-
-    // public synchronized void handleLeaderFailure(String failedLeaderAddress)
-    // {
-    //     //Remove the failed leader 
-    //     serverAddresses.remove(failedLeaderAddress); 
-
-    //     //Elect a new leader 
-    //     String newLeaderAddress = !serverAddresses.isEmpty() ? serverAddresses.get(0) : null;
-
-    //     if(newLeaderAddress != null)
-    //     {
-    //         //Notify all servers about the new leader via LeaderNotifier service 
-    //         leaderNotifier.notifyServersOfNewLeader(newLeaderAddress, serverAddresses);
-
-
-    //         //TODO: CAN ALSO initiate file propagation (not sure if we want to do it here)
-    //         //this can be callback or separate method call to initiate file sync from new leader 
-
-    //         propagateFilesToAllServers(newLeaderAddress);
-    //     }
-
-    //     //case where no more servers after leader dies
-    //     if(serverAddresses.isEmpty())
-    //     {
-    //         System.err.println("Critical Failure; Leader died and no other servers exist"); 
-    //     }
-    // }
 
     private String determineNewLeader(String failedLeaderAddress)
     {
@@ -86,11 +66,6 @@ public class LoadBalancer {
 
         //Elect a new leader 
         return !serverAddresses.isEmpty() ? serverAddresses.get(0) : null;
-
-    }
-
-    private void propagateFilesToAllServers(String leaderAddress)
-    {
 
     }
 
@@ -128,23 +103,11 @@ public class LoadBalancer {
     }
 
     // Synchronized method to change the leader (Prevents multiple thread access to shared resource(s))
-    public synchronized void changeLeader(String newLeaderAddress)
-    {
-        serverAddresses.remove(newLeaderAddress);//remove from random placement in the list so we can put it at the front as the first should always be the leader
-        serverAddresses.add(0, newLeaderAddress);
-        updateLeaderPort(newLeaderAddress);
-    }
-
-
-
-    // public synchronized String getNextServer(){
-
-    //     if(serverAddresses.isEmpty())
-    //     {
-    //         throw new IllegalStateException("No servers are available.");
-    //     }
-    //     int index = currentIndex.getAndUpdate(i -> (i + 1) % serverAddresses.size()); 
-    //     return serverAddresses.get(index);
+    // public synchronized void changeLeader(String newLeaderAddress)
+    // {
+    //     serverAddresses.remove(newLeaderAddress);//remove from random placement in the list so we can put it at the front as the first should always be the leader
+    //     serverAddresses.add(0, newLeaderAddress);
+    //     updateLeaderPort(newLeaderAddress);
     // }
 
     //Method to get list of active servers 

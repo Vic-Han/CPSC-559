@@ -16,26 +16,30 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import Utilities.codes;
+import server.ServerState.State;
+import Utilities.LeaderChangeNotification;
 
 public class Server {
     private int mainServicePort;
     private int healthCheckPort; 
     private final int managementPort = 1984; 
     private final int filePropagationPort = 1985; 
-    private AtomicInteger currentTerm = new AtomicInteger(0); //sync stuff
-    private volatile int votedFor = -1; //volatile tells compiler that value of votedFor may change at any time without any action being taken by the code the compiler finds nearby 
-    private volatile ServerState serverState = ServerState.FOLLOWER; //volatile tells compiler that value of serverState may change at any time without any action being taken by the code the compiler finds nearby 
+    //private volatile ServerState serverState = ServerState.FOLLOWER; //volatile tells compiler that value of serverState may change at any time without any action being taken by the code the compiler finds nearby 
+    private volatile ServerState serverState;
     private String currentLeaderAddress; 
     private final String PREPEND = "C:\\CPSC559Proj\\SERVERFILES\\";
+    private String thisServersAddress; 
+    private ServerActionNotifier actionNotifier;
 
     //Used to track if the main server (leader) has crashed/is not online 
     private AtomicBoolean isLeaderDown = new AtomicBoolean(false);
     
 
-    public Server(int mainServicePort, int healthCheckPort)
+    public Server(int mainServicePort, int healthCheckPort, String thisServersAddress)
     {
         this.mainServicePort = mainServicePort; 
         this.healthCheckPort = healthCheckPort;
+        this.thisServersAddress = thisServersAddress; //so that we can track who the leader is
     }
 
     // This method might be called directly by HealthCheckService if direct communication is set up
@@ -64,10 +68,28 @@ public class Server {
                     try (Socket clientSocket = serverSocket.accept();
                          ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream())) {
                         Object object = in.readObject();
-                        if (object instanceof RPCMessage) {
-                            RPCMessage message = (RPCMessage) object;
-                            if (message.getMessageType() == RPCMessage.MessageType.NEW_LEADER) {
-                                handleNewLeader(message.getLeaderAddress());
+                        if (object instanceof LeaderChangeNotification) {
+                            LeaderChangeNotification notification = (LeaderChangeNotification) object;
+                            if (notification.getMessageType() == LeaderChangeNotification.MessageType.LEADER_CHANGE_NOTIFICATION) {
+                                handleNewLeader(notification.getLeaderAddress());
+                                if(thisServersAddress.equals(notification.getLeaderAddress()))
+                                {
+                                    // This server is the new leader 
+                                    ServerState.getInstance().setState(ServerState.State.LEADER);
+                                    System.out.println("This server is now the leader.");
+
+                                    //TODO: start runner thread here 
+                                    //new Thread(new Runner(clientSocket, actionNotifier)).start(); // spwan a runner thread to serve the client; //client communicaiton with server uses Runner to interpret commands
+                                    startMainService(); //I think this is cleaner than the above line and hopefully prevents issues
+                                }
+                                else{ //set as follow to ensure its synced properly 
+                                    ServerState.getInstance().setState(ServerState.State.FOLLOWER);
+                                }
+                            //Case where the leader didn't change (i.e., system initializaiton)
+                            }else if(notification.getMessageType() == LeaderChangeNotification.MessageType.SET_LEADER_STATE_NOTIFICATION && thisServersAddress.equals(notification.getLeaderAddress()))
+                            {
+                                ServerState.getInstance().setState(ServerState.State.LEADER);
+                                System.out.println("This server is now the leader.");
                             }
                         }
                     } catch (Exception e) {
@@ -154,28 +176,16 @@ public class Server {
         }).start();
     }
 
-    public void start()
-    {
-        ServerActionNotifier actionNotifier = new ServerActionNotifier(); 
-        //int mainServicePort = 1972; //the port the server is on (each should probably be hardcoded if we are just running on separate machines)
-        new Thread(new HealthCheckService(healthCheckPort, this, mainServicePort, actionNotifier)).start(); //leader port is the same regardless of which machine hosting (only IP differs for main service socket connections)
-        startManagementListener();
-
-        if(this.serverState != ServerState.LEADER)
-        {
-            //TODO: implement non leader logic?  
-            startFilePropagationListener();
-        }
-
-        
+    private void startMainService(){
         try(ServerSocket serverSocket = new ServerSocket(mainServicePort)){
             System.out.println("Server listening on port: " + mainServicePort);
 
             while(true)//server can accept multiple clients on 1 port 
             {
-                Socket clientSocket = serverSocket.accept();
-                if(this.serverState == ServerState.LEADER) //only actually allow the client to connect to the LEADER server
+                //Socket clientSocket = serverSocket.accept();
+                if(this.serverState.getState() == State.LEADER) //only actually allow the client to connect to the LEADER server
                 {
+                    Socket clientSocket = serverSocket.accept();
                     new Thread(new Runner(clientSocket, actionNotifier)).start(); // spwan a runner thread to serve the client; //client communicaiton with server uses Runner to interpret commands
                 }
             }
@@ -184,6 +194,43 @@ public class Server {
         {
             System.out.println("Server Exception: " + e.getMessage());
         }
+
+    }
+
+    public void start()
+    {
+        actionNotifier = new ServerActionNotifier(); 
+        //int mainServicePort = 1972; //the port the server is on (each should probably be hardcoded if we are just running on separate machines)
+        new Thread(new HealthCheckService(healthCheckPort, this, mainServicePort, actionNotifier)).start(); //leader port is the same regardless of which machine hosting (only IP differs for main service socket connections)
+        startManagementListener();
+
+
+        ServerState.getInstance().getState();
+        if(this.serverState.getState() != State.LEADER)
+        {
+            //TODO: implement non leader logic?  
+            startFilePropagationListener();
+        }
+
+            startMainService();
+
+        
+        // try(ServerSocket serverSocket = new ServerSocket(mainServicePort)){
+        //     System.out.println("Server listening on port: " + mainServicePort);
+
+        //     while(true)//server can accept multiple clients on 1 port 
+        //     {
+        //         Socket clientSocket = serverSocket.accept();
+        //         if(this.serverState.getState() == State.LEADER) //only actually allow the client to connect to the LEADER server
+        //         {
+        //             new Thread(new Runner(clientSocket, actionNotifier)).start(); // spwan a runner thread to serve the client; //client communicaiton with server uses Runner to interpret commands
+        //         }
+        //     }
+           
+        // }catch(Exception e)
+        // {
+        //     System.out.println("Server Exception: " + e.getMessage());
+        // }
     }
 
 
@@ -191,66 +238,13 @@ public class Server {
     {
         int mainServicePort = 1972; 
         int healthCheckPort = 1973; 
+        //should probably parse from args the server address so we can do other stuffs (for now I'll hardcode to 127.0.0.1 but we need to change that )
+            //TODO: parse args to get correct server IP addr 
+        String thisAddress = "127.0.0.1";
 
         //Start dedicated health check service server 
 
-        new Server(mainServicePort, healthCheckPort).start();
-
-
+        new Server(mainServicePort, healthCheckPort, thisAddress).start();
     }
 
-
-    //TODO: REMOVE OLD CODE IF NEW CODE WORKS
-     // public void detectLeaderFailure(){
-    //     //Method should be called by HealthCheckService.java when it detects the leader is down 
-    //     isLeaderDown.set(true); 
-    //     //Check if server should start an election 
-    //     if(serverState != serverState.LEADER)
-    //     {
-    //         startElection(); 
-    //     }
-    // }
-
-    // private synchronized void startElection(){
-    //     serverState = ServerState.CANDIDATE; 
-    //     currentTerm.incrementAndGet(); //increment current term (thread safe method)
-    //     votedFor = 0; //Assuming this servers ID is 0 for example TODO: (should probably have unique ID THAT WE IMPLEMENT )
-
-    //     System.out.println("Server starting election for term: " + currentTerm.get());
-
-    //     //Election Logic
-    // }
-
-    // private void startManagementListener()
-    // {
-    //     try(ServerSocket serverSocket = new ServerSocket(managementPort)){
-    //         System.out.println("Listening for management commands on port: " + managementPort);
-    //         while(true)
-    //         {
-    //             try (Socket clientSocket = serverSocket.accept();   
-    //                 //DataInputStream in = new DataInputStream(clientSocket.getInputStream())){
-    //                 // byte command = in.readByte(); 
-    //                 // if(command == codes.NEWLEADERNOTIFICATION)
-    //                 // {
-    //                 //     String newLeaderAddress = in.readUTF(); 
-    //                 //     handleNewLeader(newLeaderAddress);
-    //                 // }
-    //                 ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream())) {
-    //                 RPCMessage message = (RPCMessage) in.readObject();
-    //                 if (message.getMessageType() == RPCMessage.MessageType.NEW_LEADER) {
-    //                 handleNewLeader(message.getLeaderAddress());
-    //                 }
-    //             }catch(Exception e)
-    //             {
-    //                 System.out.println("Management Listener Error: " + e.getMessage());
-    //                 //TODO: HANDLE EXCEPTION 
-    //             }
-
-    //         }
-    //     }catch(Exception e)
-    //     {
-    //         System.err.println("Failed to start Management Listener: " + e.getMessage());
-    //         // TODO: Handle exception
-    //     }
-    // }
 }

@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 public class HealthCheckScheduler {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    private LoadBalancer loadBalancer;
+    private final LoadBalancer loadBalancer; //unsure if we want this to be final 
 
     //Constructor to ensure we get the active instance of the LoadBalancer to ensure we are correctly performing health checks via LoadBalancer functions
     public HealthCheckScheduler(LoadBalancer loadBalancer)
@@ -20,11 +20,11 @@ public class HealthCheckScheduler {
             boolean isLeaderCheck = serverAddress.equals(loadBalancer.getLeaderAddress()); //get the current leader address to check if we are running regular or leader check
             ServerHealthCheck healthCheck = new ServerHealthCheck(serverAddress, loadBalancer, isLeaderCheck);
             //Currently set to run every 10 seconds (supposedly 10 to 30 is the best range so we may need to lower this if we find synchronization isn't happening properly)
-            scheduler.scheduleAtFixedRate(healthCheck, 0, 10, TimeUnit.SECONDS); 
+            scheduler.scheduleAtFixedRate(healthCheck, 0, 5, TimeUnit.SECONDS); 
         });
 
         //Schedule separate task for leaders health check
-        scheduler.scheduleAtFixedRate(() -> loadBalancer.checkLeaderHealth(), 0, 10, TimeUnit.SECONDS);
+        // scheduler.scheduleAtFixedRate(() -> loadBalancer.checkLeaderHealth(), 0, 5, TimeUnit.SECONDS);
 
     }
 

@@ -28,11 +28,7 @@ public class LoadBalancerServer {
                 try(Socket clientSocket = serverSocket.accept();
                 DataInputStream is = new DataInputStream(clientSocket.getInputStream());
                 DataOutputStream os = new DataOutputStream(clientSocket.getOutputStream())){
-                //PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)){ 
-                //String serverAddress = loadBalancer.getNextServer(); 
 
-                //Expect specific request type "GET_ACTIVE_SERVERS"
-                //String command = (String) is.readObject(); 
                 byte command = is.readByte(); 
                 if(command == codes.GETACTIVESERVERS)
                 {

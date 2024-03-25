@@ -1,11 +1,13 @@
 package LoadBalancer;
 
 import java.io.DataOutputStream;
+import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.List;
 
 import Utilities.codes;
+import Utilities.LeaderChangeNotification;
 
 public class LeaderNotifier {
 
@@ -16,7 +18,9 @@ public class LeaderNotifier {
 
     public void notifyServersOfNewLeader(String newLeaderAddress, List<String> serverAddresses)
     {
-        RPCMessage newLeaderMessage = new RPCMessage(RPCMessage.MessageType.NEW_LEADER, newLeaderAddress);
+        String [] newLeaderAddressChunks = newLeaderAddress.split(":");
+        String newLeaderAddressIP = newLeaderAddressChunks[0];
+        LeaderChangeNotification newLeaderMessage = new LeaderChangeNotification(LeaderChangeNotification.MessageType.LEADER_CHANGE_NOTIFICATION, newLeaderAddressIP);
         for(String serverAddress : serverAddresses)
         {
             if(!serverAddress.equals(newLeaderAddress)) //exclude new leader 
@@ -33,7 +37,7 @@ public class LeaderNotifier {
         }
     }
 
-    private void sendNewLeaderNotification(String serverAddress, RPCMessage newLeaderMessage) throws Exception //caught by calling method notifyServersOfNewLeader
+    private void sendNewLeaderNotification(String serverAddress, LeaderChangeNotification newLeaderMessage) throws Exception //caught by calling method notifyServersOfNewLeader
     {
         String[] parts = serverAddress.split(":");
         String host = parts[0];
@@ -44,15 +48,16 @@ public class LeaderNotifier {
         }
     }
 
-    private void notifyServerOfNewLeader(String serverAddress, String newLeaderAddress) throws Exception //caught by calling method notifyServersOfNewLeader
+    public void notifyInitialLeaderState(String serverAddress) throws Exception
     {
         String[] parts = serverAddress.split(":");
-        String host = parts[0];
-        try(Socket socket = new Socket(host, managementPort);
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream())){
-                out.writeByte(codes.NEWLEADERNOTIFICATION);
-                out.writeUTF(newLeaderAddress);
-                
+        String host = parts[0]; 
+
+        LeaderChangeNotification setInitialLeaderStateMessage = new LeaderChangeNotification(LeaderChangeNotification.MessageType.SET_LEADER_STATE_NOTIFICATION, host);
+
+        try (Socket socket = new Socket(host, managementPort);
+            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream())){
+                out.writeObject(setInitialLeaderStateMessage);
             }
     }
 
