@@ -79,6 +79,10 @@ public class ProtocolHandler {
             //failedPropagationServer HOLDS THE SERVER IP ADDRESS OF THE SERVER THAT FAILED TO RECEIVE FILE 
             //this would only handle 1 server failing to receive file (we can change this by using some sort of response code in the for loop above and handling there instead if we want )
         }
+        else{
+            //TODO: update database and send to other servers
+
+        }
         }catch(Exception e)
         {
             System.err.println("Error generating checksum for file: " + file.getName() + ". Error: " + e.getMessage());
@@ -164,16 +168,6 @@ public class ProtocolHandler {
         }
     }
 
-    
-    // method that is called when the server recieves a request to download a file
-    // should tell the client the worker IP and port number that has the download
-    // private void handleDownloadRequest(String fileName, int userID, String ClientIP, int ClientPort) {
-    // 	//LOAD BALANCER
-    // 	// Get available worker
-    // 	// send info back to client
-    // 	//WORKER
-    	
-    // }
 
     public void workerHandleDownloadRequest() {
         try {

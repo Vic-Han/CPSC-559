@@ -161,6 +161,12 @@ public class Server {
         new Thread(new HealthCheckService(healthCheckPort, this, mainServicePort, actionNotifier)).start(); //leader port is the same regardless of which machine hosting (only IP differs for main service socket connections)
         startManagementListener();
 
+        if(this.serverState != ServerState.LEADER)
+        {
+            //TODO: implement non leader logic?  
+            startFilePropagationListener();
+        }
+
         
         try(ServerSocket serverSocket = new ServerSocket(mainServicePort)){
             System.out.println("Server listening on port: " + mainServicePort);
@@ -171,12 +177,6 @@ public class Server {
                 if(this.serverState == ServerState.LEADER) //only actually allow the client to connect to the LEADER server
                 {
                     new Thread(new Runner(clientSocket, actionNotifier)).start(); // spwan a runner thread to serve the client; //client communicaiton with server uses Runner to interpret commands
-                }
-                else
-                {
-                    //TODO: implement non leader logic?  
-                    //Do I just start the file propagation listener here? that probably makes most sense (LEADER SHOULDNT HAVE TO RECEIEVE FILES FROM OTHER SERVERS)
-                    startFilePropagationListener();
                 }
             }
            
